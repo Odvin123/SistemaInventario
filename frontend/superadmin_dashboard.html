@@ -236,6 +236,76 @@
             createEmpresa(tenant_id, nombre_empresa, nombre_admin, correo_electronico, password, forzar_cambio_pw); 
         }
 
+ // Nueva función resetPassword mejorada
+async function resetPassword(tenantId, adminEmail) {
+
+    if (adminEmail === 'N/A') {
+        alert("Error: No se pudo encontrar el correo del administrador para este puesto.");
+        return;
+    }
+    
+    
+    const choice = prompt(
+        ` Restablecer Contraseña para:\n\nPuesto ID: ${tenantId}\nCorreo: ${adminEmail}\n\nSeleccione una opción:\n\n1) Generar una contraseña temporal ALEATORIA.\n2) Ingresar una contraseña temporal MANUALMENTE.`
+    );
+
+    if (choice === null) {
+        alert("Operación de reseteo cancelada.");
+        return;
+    }
+    
+    let newTempPassword;
+
+    if (choice === '1') {
+        newTempPassword = 'GENERAR_ALEATORIA'; 
+        alert("Contraseña aleatoria marcada para generación en el servidor. Presione OK para confirmar el envío por correo.");
+        
+    } else if (choice === '2') {
+        newTempPassword = prompt(" Ingrese una Contraseña TEMPORAL (mínimo 6 caracteres):");
+
+        if (!newTempPassword) {
+            alert("Operación de reseteo cancelada.");
+            return;
+        }
+
+        if (newTempPassword.length < 6) {
+            alert("La contraseña temporal debe tener al menos 6 caracteres.");
+            return;
+        }
+        
+    } else {
+        alert("Opción inválida. Operación cancelada.");
+        return;
+    }
+
+    try {
+        const response = await fetch(API_URL_ADMIN_RESET, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                tenant_id: tenantId,
+                correo_electronico: adminEmail,
+                new_password: newTempPassword 
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            const finalPassword = result.generatedPassword || newTempPassword; 
+            
+            alert(`✅ Éxito: ${result.message}\n\nSe ha enviado un correo al administrador.\n\nContraseña temporal usada: ${finalPassword}`);
+            
+            loadEmpresas(); 
+        } else {
+            alert('Error al resetear la contraseña: ' + (result.message || 'Error desconocido del servidor.'));
+        }
+
+    } catch (e) {
+        alert('Error de conexión con el servidor al intentar resetear la contraseña.');
+    }
+}
+
         async function createEmpresa(tenant_id, nombre_empresa, nombre_admin, correo_electronico, password, forzar_cambio_pw) {  
             const data = { 
                 tenant_id, 

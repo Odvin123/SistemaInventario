@@ -2,10 +2,32 @@ require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
 const cors = require('cors'); 
+const nodemailer = require('nodemailer'); 
 const db = require('./db'); 
 
 const app = express();
 const port = process.env.PORT || 4000;
+
+// Configuración del servicio de correo
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_SERVICE_HOST,
+    port: process.env.EMAIL_SERVICE_PORT,
+    secure: false, 
+    auth: {
+        user: process.env.EMAIL_SERVICE_USER,
+        pass: process.env.EMAIL_SERVICE_PASS
+    }
+});
+
+// Función para generar una contraseña aleatoria y seguras.
+function generateRandomPassword(length = 12) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+}
 
 
 app.use(cors({
@@ -280,16 +302,27 @@ app.get('/api/admin/empresas', async (req, res) => {
 });
 
 //Resetear Contraseña de Administrador por SuperAdmin
+
 app.post('/api/admin/reset-pw', async (req, res) => {
     const { tenant_id, correo_electronico, new_password } = req.body;
 
     if (!tenant_id || !correo_electronico || !new_password) {
         return res.status(400).json({ success: false, message: 'Faltan datos obligatorios.' });
     }
+    
+    let passwordToHash = new_password;
+    let generatedPassword = null;
+    
+    if (new_password === 'GENERAR_ALEATORIA') {
+        generatedPassword = generateRandomPassword();
+        passwordToHash = generatedPassword;
+    } else if (new_password.length < 6) {
+        return res.status(400).json({ success: false, message: 'La contraseña temporal debe tener al menos 6 caracteres.' });
+    }
 
     try {
         const userResult = await db.query(
-            `SELECT u.id 
+            `SELECT u.id, e.nombre_empresa
              FROM usuarios u 
              JOIN empresas e ON u.empresa_id = e.id 
              WHERE u.correo_electronico = $1 
@@ -303,25 +336,47 @@ app.post('/api/admin/reset-pw', async (req, res) => {
         }
         
         const userId = userResult.rows[0].id;
+        const nombreEmpresa = userResult.rows[0].nombre_empresa;
 
-        const newPasswordHash = await bcrypt.hash(new_password, 10);
+        const newPasswordHash = await bcrypt.hash(passwordToHash, 10);
 
-        // ACTUALIZAR la contraseña 
         await db.query(
             `UPDATE usuarios 
              SET password_hash = $1, necesita_cambio_pw = TRUE 
              WHERE id = $2`,
             [newPasswordHash, userId]
         );
+        
+        const resetLink = `http://localhost:5500/frontend/login.html?tenant=${tenant_id}`;
+
+        await transporter.sendMail({
+            from: `"Soporte Central SaaS" <${process.env.EMAIL_SERVICE_USER}>`,
+            to: correo_electronico, 
+            subject: `⚠️ Aviso de Reseteo de Contraseña - ${nombreEmpresa}`,
+            html: `
+                <p>Estimado Administrador de **${nombreEmpresa}** (${tenant_id}),</p>
+                <p>Su contraseña ha sido restablecida por un SuperAdmin.</p>
+                <p>Para acceder al sistema debe usar la siguiente contraseña temporal y será **forzado a cambiarla** inmediatamente:</p>
+                <h3 style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc;">Contraseña Temporal: <strong>${passwordToHash}</strong></h3>
+                <p>Use este enlace para acceder:</p>
+                <a href="${resetLink}" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Ir a Iniciar Sesión</a>
+                <p style="margin-top: 20px; color: #dc3545;">*Por favor, cambie su contraseña lo antes posible por una de su elección.*</p>
+            `,
+        });
+
+        const responseMessage = generatedPassword 
+            ? `Contraseña aleatoria generada y enviada a ${correo_electronico}.` 
+            : `Contraseña manual establecida y enviada a ${correo_electronico}.`;
 
         res.status(200).json({ 
             success: true, 
-            message: `Contraseña temporal establecida para ${correo_electronico}. El usuario será forzado a cambiarla al iniciar sesión.` 
+            message: responseMessage,
+            generatedPassword: generatedPassword 
         });
 
     } catch (error) {
-        console.error('Error al resetear contraseña por admin:', error);
-        res.status(500).json({ success: false, message: 'Error interno al procesar el reseteo.' });
+        console.error('Error FATAL al resetear contraseña o enviar correo:', error);
+        res.status(500).json({ success: false, message: 'Error interno al procesar el reseteo y/o enviar el correo.' });
     }
 });
 
