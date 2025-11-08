@@ -34,15 +34,16 @@
         <div id="loading-message" style="color: blue;">Cargando empresas...</div>
         <table id="empresas-table" style="display:none;">
             <thead>
-                <tr>
-                    <th>ID Interno</th>
-                    <th>Tenant ID</th>
-                    <th>Nombre Empresa</th>
-                    <th>Estado</th>
-                    <th>Registro</th>
-                    <th>Acciones</th> 
-                </tr>
-            </thead>
+                <tr>
+                    <th>ID Interno</th>
+                    <th>Tenant ID</th>
+                    <th>Nombre Empresa</th>
+                    <th>Correo Admin</th>
+                    <th>Estado</th>
+                    <th>Registro</th>
+                    <th>Acciones</th> 
+                </tr>
+            </thead>
             <tbody id="empresas-tbody">
             </tbody>
         </table>
@@ -118,47 +119,52 @@
         document.getElementById('loading-message').textContent = 'Error al cargar los datos de las empresas.';
     }
 }
+        // Función para renderizar empresas en la tabla
+function renderEmpresas(empresas) {
+    const tbody = document.getElementById('empresas-tbody');
+    tbody.innerHTML = ''; 
 
-        function renderEmpresas(empresas) {
-            const tbody = document.getElementById('empresas-tbody');
-            tbody.innerHTML = ''; 
-
-            empresas.forEach(empresa => {
-                const tr = document.createElement('tr');
-                
-                const isSuperAdmin = empresa.tenant_id === 'super_admin';
-
-                const adminEmail = empresa.admin_email || 'N/A';
-
-                tr.innerHTML = `
-                    <td>${empresa.id}</td>
-                    <td>${empresa.tenant_id}</td> <td>${empresa.nombre_empresa}</td>
-                    <td>${empresa.activo ? 'Activo' : 'Suspendido'}</td>
-                    <td>${new Date(empresa.fecha_registro).toLocaleDateString()}</td>
-                    <td>
-                        <button 
-                            onclick="resetPassword('${empresa.tenant_id}', '${adminEmail}')" 
-                            ${isSuperAdmin ? 'disabled' : ''} 
-                            title="Restablecer la contraseña del Administrador y forzar cambio.">
-                            🔒 Reset Contraseña
-                        </button>
-
-                        <button onclick="sendInvite('${empresa.tenant_id}')" ${isSuperAdmin ? 'disabled' : ''}>🔗 Invitar</button>
-                        <button>⚙️ Gestionar</button>
-                        
-                        <button 
-                            class="btn-delete"
-                            onclick="deleteEmpresa('${empresa.tenant_id}', '${empresa.nombre_empresa}')"
-                            ${isSuperAdmin ? 'disabled' : ''} 
-                            title="${isSuperAdmin ? 'La empresa central no se puede eliminar.' : 'Eliminar puesto.'}">
-                            🗑️ Eliminar
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+    empresas.forEach(empresa => {
+        const tr = document.createElement('tr');
         
+        const isSuperAdmin = empresa.tenant_id === 'super_admin';
+        const adminEmail = empresa.admin_email || 'N/A'; 
+        const fechaRegistro = new Date(empresa.fecha_registro).toLocaleDateString();
+
+        tr.innerHTML = `
+            <td>${empresa.id}</td>
+            
+            <td>${empresa.tenant_id}</td>
+            
+            <td>${empresa.nombre_empresa}</td>
+            
+            <td>${adminEmail}</td>
+            
+            <td>${empresa.activo ? 'Activo' : 'Suspendido'}</td>
+            
+            <td>${fechaRegistro}</td>
+            
+            <td>
+                <button 
+                    onclick="resetPassword('${empresa.tenant_id}', '${adminEmail}')" 
+                    ${isSuperAdmin || adminEmail === 'N/A' ? 'disabled' : ''} 
+                    title="Restablecer la contraseña del Administrador y forzar cambio.">
+                    🔒 Reset Contraseña
+                </button>
+                <button onclick="sendInvite('${empresa.tenant_id}')" ${isSuperAdmin ? 'disabled' : ''}>🔗 Invitar</button>
+                <button onclick="gestionarEmpresa('${empresa.tenant_id}')">⚙️ Gestionar</button>
+                <button 
+                    class="btn-delete"
+                    onclick="deleteEmpresa('${empresa.tenant_id}', '${empresa.nombre_empresa}')"
+                    ${isSuperAdmin ? 'disabled' : ''} 
+                    title="${isSuperAdmin ? 'La empresa central no se puede eliminar.' : 'Eliminar puesto.'}">
+                    🗑️ Eliminar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
         //Función de enviar invitación
         function sendInvite(tenantId) {
             const inviteLink = `http://localhost:5500/frontend/login.html?tenant=${tenantId}`; 
@@ -292,7 +298,7 @@ async function resetPassword(tenantId, adminEmail) {
         alert('Error de conexión con el servidor al intentar resetear la contraseña.');
     }
 }
-
+        //Función de crear empresa
         async function createEmpresa(tenant_id, nombre_empresa, nombre_admin, correo_electronico, password, forzar_cambio_pw) {  
             const data = { 
                 tenant_id, 

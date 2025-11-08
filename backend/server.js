@@ -325,7 +325,7 @@ app.get('/api/admin/empresas', verifyToken, async (req, res) => {
                 e.nombre_empresa, 
                 e.activo, 
                 e.fecha_registro,
-                (SELECT u.correo_electronico FROM usuarios u WHERE u.empresa_id = e.id AND u.rol = 'admin' LIMIT 1) AS admin_email
+                (SELECT u.correo_electronico FROM usuarios u WHERE u.empresa_id = e.id AND u.rol = 'administrador' LIMIT 1) AS admin_email
             FROM 
                 empresas e
             ORDER BY 
