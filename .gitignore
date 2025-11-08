@@ -1,4 +1,4 @@
-# Ignorar archivos de configuración sensibles
+# Ignorar archivos de entorno
 .env
 
 # Ignorar la carpeta de dependencias
