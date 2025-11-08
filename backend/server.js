@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const cors = require('cors'); 
 const nodemailer = require('nodemailer'); 
+const jwt = require('jsonwebtoken'); 
 const db = require('./db'); 
 
 const app = express();
@@ -19,6 +20,27 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Middleware para verificar JWT en rutas protegidas
+const verifyToken = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, message: 'Acceso denegado. No se proporcionó Token.' });
+    }
+
+    const token = authHeader.split(' ')[1]; 
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        req.usuario = decoded; 
+        
+        next(); 
+
+    } catch (err) {
+        return res.status(403).json({ success: false, message: 'Token inválido o expirado.' });
+    }
+};
 // Función para generar una contraseña aleatoria y seguras.
 function generateRandomPassword(length = 12) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
@@ -115,7 +137,6 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-
         const result = await db.query(
             `SELECT u.*, e.tenant_id 
              FROM usuarios u
@@ -129,17 +150,24 @@ app.post('/api/login', async (req, res) => {
         }
 
         const usuario = result.rows[0];
-
         const passwordMatch = await bcrypt.compare(password, usuario.password_hash);
 
         if (!passwordMatch) {
             return res.status(401).json({ success: false, message: 'Credenciales inválidas o Tenant ID incorrecto.' });
         }
         
+        const payload = {
+            id: usuario.id,
+            tenantId: usuario.tenant_id,
+            rol: usuario.rol
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
         
         return res.status(200).json({
             success: true,
             message: 'Autenticación exitosa.',
+            token: token, 
             tenant_id: usuario.tenant_id,
             rol: usuario.rol,
             necesitaCambioPw: usuario.necesita_cambio_pw, 
@@ -152,7 +180,15 @@ app.post('/api/login', async (req, res) => {
 });
 
 //Eliminación de Empresas y todos sus Usuarios
-app.delete('/api/empresa/:tenantId', async (req, res) => {
+app.delete('/api/empresa/:tenantId', verifyToken, async (req, res) => {
+    
+    if (req.usuario.rol !== 'super_admin') {
+        return res.status(403).json({ 
+            success: false, 
+            message: 'Acción de eliminación no permitida. Solo SuperAdmin.' 
+        });
+    }
+
     const { tenantId } = req.params; 
     
     if (tenantId === 'super_admin') {
@@ -161,8 +197,8 @@ app.delete('/api/empresa/:tenantId', async (req, res) => {
             message: 'Error: El puesto de Administración Central (super_admin) no puede ser eliminado.' 
         });
     }
+
     try {
-        
         const result = await db.query(
             'DELETE FROM empresas WHERE tenant_id = $1 RETURNING nombre_empresa',
             [tenantId]
@@ -273,41 +309,42 @@ app.post('/api/register', async (req, res) => {
 });
 
 
-//Listado de Empresas para SuperAdmin
-app.get('/api/admin/empresas', async (req, res) => {
+
+// Listado de Empresas para SuperAdmin
+app.get('/api/admin/empresas', verifyToken, async (req, res) => { 
+    
+    if (req.usuario.rol !== 'super_admin') {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    }
+    
     try {
-        const empresasResult = await db.query(
-            `SELECT 
+        const result = await db.query(`
+            SELECT 
                 e.id, 
                 e.tenant_id, 
                 e.nombre_empresa, 
                 e.activo, 
                 e.fecha_registro,
-                u.correo_electronico AS admin_email
-             FROM empresas e
-             LEFT JOIN usuarios u ON e.id = u.empresa_id AND u.rol = 'administrador'
-             ORDER BY e.fecha_registro DESC`
-        );
-
-        res.json({
-            success: true,
-            empresas: empresasResult.rows,
-            total: empresasResult.rows.length
-        });
-
+                (SELECT u.correo_electronico FROM usuarios u WHERE u.empresa_id = e.id AND u.rol = 'admin' LIMIT 1) AS admin_email
+            FROM 
+                empresas e
+            ORDER BY 
+                e.id ASC
+        `);
+        return res.status(200).json({ success: true, empresas: result.rows });
     } catch (error) {
         console.error('Error al listar empresas:', error);
-        res.status(500).json({ success: false, message: 'Error interno del servidor al listar empresas.' });
+        res.status(500).json({ success: false, message: 'Error interno al cargar datos.' });
     }
 });
 
 //Resetear Contraseña de Administrador por SuperAdmin
 
-app.post('/api/admin/reset-pw', async (req, res) => {
+app.post('/api/admin/reset-pw', verifyToken, async (req, res) => {
     const { tenant_id, correo_electronico, new_password } = req.body;
 
-    if (!tenant_id || !correo_electronico || !new_password) {
-        return res.status(400).json({ success: false, message: 'Faltan datos obligatorios.' });
+    if (req.usuario.rol !== 'super_admin') {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
     }
     
     let passwordToHash = new_password;
