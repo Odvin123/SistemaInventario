@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambio de Contraseña Obligatorio</title>
+</head>
+<body>
+    <div style="padding: 20px; max-width: 400px; margin: 50px auto; border: 1px solid #ccc; border-radius: 8px;">
+        <h2>Establecer Nueva Contraseña</h2>
+        <p>Estás usando una contraseña temporal. Por favor, crea una nueva contraseña segura.</p>
+        
+        <form id="changePasswordForm">
+            <label for="newPassword">Nueva Contraseña:</label>
+            <input type="password" id="newPassword" required style="width: 100%; padding: 8px; margin-bottom: 10px;" minlength="6"><br>
+            
+            <label for="confirmPassword">Confirmar Contraseña:</label>
+            <input type="password" id="confirmPassword" required style="width: 100%; padding: 8px; margin-bottom: 20px;" minlength="6"><br>
+            
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Cambiar Contraseña
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        const API_URL_CHANGE_PW = 'http://localhost:4000/api/cambio-pw-forzado';
+        const form = document.getElementById('changePasswordForm');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantId = urlParams.get('tenant');
+        const email = urlParams.get('email');
+
+        if (!tenantId || !email) {
+            alert("Sesión de cambio de contraseña inválida. Intente iniciar sesión de nuevo.");
+            window.location.href = 'login.html';
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmPassword').value;
+
+            if (newPw.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres.');
+                return;
+            }
+
+            if (newPw !== confirmPw) {
+                alert('Las contraseñas no coinciden.');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL_CHANGE_PW, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        tenant_id: tenantId,
+                        correo_electronico: email,
+                        new_password: newPw 
+                    })
+                });
+                
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('¡Contraseña cambiada exitosamente! Por favor, inicia sesión de nuevo con tu nueva contraseña.');
+                    sessionStorage.clear();
+                    window.location.href = 'login.html';
+                } else {
+                    alert('Error al cambiar contraseña: ' + (result.message || 'Error de seguridad o error desconocido.'));
+                }
+
+            } catch (error) {
+                alert('Error de conexión con el servidor (puerto 4000).');
+            }
+        });
+    </script>
+</body>
+</html>

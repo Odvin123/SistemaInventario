@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SuperAdmin</title>
+    <style>
+        .dashboard-container { padding: 20px; background-color: #e6f7ff; min-height: 100vh; }
+        .dashboard-container h1 { color: #004d99; }
+        .dashboard-menu { margin-bottom: 20px; }
+        .dashboard-menu button, .dashboard-menu a {
+            padding: 8px 15px; margin: 0 5px; background-color: #007bff;
+            color: white; border: none; border-radius: 5px;
+            cursor: pointer; text-decoration: none;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn-delete { background-color: #dc3545; } 
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>🚀 Panel de Control SuperAdmin</h1>
+        <p>Gestión Centralizada de Inquilinos (Puestos/Empresas)</p>
+        
+        <div class="dashboard-menu">
+            <button onclick="showCreateForm()">➕ Crear Nuevo Puesto/Empresa</button>
+            <a href="login.html" onclick="sessionStorage.clear()">Cerrar Sesión</a>
+        </div>
+        
+        <hr>
+        <h2>Lista de Empresas Registradas</h2>
+        <div id="loading-message" style="color: blue;">Cargando empresas...</div>
+        <table id="empresas-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>ID Interno</th>
+                    <th>Tenant ID</th>
+                    <th>Nombre Empresa</th>
+                    <th>Estado</th>
+                    <th>Registro</th>
+                    <th>Acciones</th> 
+                </tr>
+            </thead>
+            <tbody id="empresas-tbody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL_EMPRESAS = 'http://localhost:4000/api/admin/empresas';
+        const API_URL_REGISTER = 'http://localhost:4000/api/register';
+        const API_URL_ADMIN_RESET = 'http://localhost:4000/api/admin/reset-pw';
+        const API_URL_CHECK_TENANT = 'http://localhost:4000/api/check-tenant/'; 
+
+        if (sessionStorage.getItem('userRol') !== 'super_admin') {
+            alert('Acceso denegado. Redirigiendo al login.');
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        async function loadEmpresas() {
+            try {
+                const loadingMsg = document.getElementById('loading-message');
+                const table = document.getElementById('empresas-table');
+                loadingMsg.style.display = 'block';
+                table.style.display = 'none';
+
+                const response = await fetch(API_URL_EMPRESAS, { method: 'GET' });
+                const result = await response.json();
+                
+                const tbody = document.getElementById('empresas-tbody');
+                tbody.innerHTML = ''; 
+
+                if (result.success && result.empresas.length > 0) {
+                    renderEmpresas(result.empresas); 
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6">No hay empresas registradas.</td></tr>';
+                }
+
+                loadingMsg.style.display = 'none';
+                table.style.display = 'table';
+
+            } catch (error) {
+                console.error('Error al cargar empresas:', error);
+                document.getElementById('loading-message').textContent = 'Error al cargar los datos de las empresas.';
+            }
+        }
+
+        function renderEmpresas(empresas) {
+            const tbody = document.getElementById('empresas-tbody');
+            tbody.innerHTML = ''; 
+
+            empresas.forEach(empresa => {
+                const tr = document.createElement('tr');
+                
+                const isSuperAdmin = empresa.tenant_id === 'super_admin';
+
+                const adminEmail = empresa.admin_email || 'N/A';
+
+                tr.innerHTML = `
+                    <td>${empresa.id}</td>
+                    <td>${empresa.tenant_id}</td> <td>${empresa.nombre_empresa}</td>
+                    <td>${empresa.activo ? 'Activo' : 'Suspendido'}</td>
+                    <td>${new Date(empresa.fecha_registro).toLocaleDateString()}</td>
+                    <td>
+                        <button 
+                            onclick="resetPassword('${empresa.tenant_id}', '${adminEmail}')" 
+                            ${isSuperAdmin ? 'disabled' : ''} 
+                            title="Restablecer la contraseña del Administrador y forzar cambio.">
+                            🔒 Reset Contraseña
+                        </button>
+
+                        <button onclick="sendInvite('${empresa.tenant_id}')" ${isSuperAdmin ? 'disabled' : ''}>🔗 Invitar</button>
+                        <button>⚙️ Gestionar</button>
+                        
+                        <button 
+                            class="btn-delete"
+                            onclick="deleteEmpresa('${empresa.tenant_id}', '${empresa.nombre_empresa}')"
+                            ${isSuperAdmin ? 'disabled' : ''} 
+                            title="${isSuperAdmin ? 'La empresa central no se puede eliminar.' : 'Eliminar puesto.'}">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function sendInvite(tenantId) {
+            const inviteLink = `http://localhost:5500/frontend/login.html?tenant=${tenantId}`; 
+            prompt(`Copie y envíe este Tenant ID y el Enlace de Invitación:\n\nTenant ID: ${tenantId}\n\nEnlace:`, inviteLink);
+        }
+        
+        async function resetPassword(tenantId, adminEmail) {
+
+            if (adminEmail === 'N/A') {
+                alert("Error: No se pudo encontrar el correo del administrador para este puesto.");
+                return;
+            }
+            
+            const newTempPassword = prompt(`1/2: Restablecer Contraseña para:\n\nPuesto ID: ${tenantId}\nCorreo: ${adminEmail}\n\nIngrese una Contraseña TEMPORAL (mínimo 6 caracteres):`);
+            
+            if (!newTempPassword) {
+                alert("Operación de reseteo cancelada.");
+                return;
+            }
+
+            if (newTempPassword.length < 6) {
+                alert("La contraseña temporal debe tener al menos 6 caracteres.");
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL_ADMIN_RESET, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        tenant_id: tenantId,
+                        correo_electronico: adminEmail,
+                        new_password: newTempPassword 
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const resetLink = `http://localhost:5500/frontend/login.html?tenant=${tenantId}`;
+                    
+                    alert(`✅ Éxito: ${result.message}\n\nComparta al administrador:\n- Contraseña Temporal: ${newTempPassword}\n- Enlace de Acceso: ${resetLink}`);
+                    loadEmpresas(); 
+                } else {
+                    alert('Error al resetear la contraseña: ' + (result.message || 'Error desconocido del servidor.'));
+                }
+
+            } catch (e) {
+                alert('Error de conexión con el servidor al intentar resetear la contraseña.');
+            }
+        }
+        
+        //Funcion de crear empresa
+        async function showCreateForm() {
+            let tenant_id;
+            
+            while (true) {
+                tenant_id = prompt("ID del Puesto/Empresa:");
+                if (!tenant_id) return;
+                
+                if (tenant_id.toLowerCase() === 'super_admin') {
+                    alert('¡Error! El Tenant ID "super_admin" está reservado.');
+                    continue; 
+                }
+
+                try {
+                    const response = await fetch(`${API_URL_CHECK_TENANT}${tenant_id}`);
+                    const result = await response.json();
+
+                    if (result.exists) {
+                        alert(`¡Error de Duplicidad! El Tenant ID "${tenant_id}" ya está en uso. Por favor, ingrese uno diferente.`);
+                    } else {
+                        break; 
+                    }
+                } catch (e) {
+                    alert('Error de conexión al verificar el Tenant ID. Intente más tarde.');
+                    return;
+                }
+            }
+            
+            const nombre_empresa = prompt(" Nombre de la Empresa:");
+            if (!nombre_empresa) return;
+            
+            const nombre_admin = prompt(" Nombre COMPLETO del Administrador Inicial:");
+            if (!nombre_admin) return;
+
+            let correo_electronico;
+            const emailRegex = /^[^\s@]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/i;
+
+            while (true) {
+                correo_electronico = prompt(" Correo del Admin Inicial (Solo dominios permitidos: @gmail.com, @outlook.com, @yahoo.com, @icloud.com):");
+                
+                if (!correo_electronico) return; 
+
+                if (emailRegex.test(correo_electronico)) {
+                    break; 
+                } else {
+                    alert('¡Error de Correo! El formato es inválido o el dominio no está permitido. Intente de nuevo.');
+                }
+            }
+
+            const password = prompt("Contraseña Temporal del Admin:");
+            if (!password) return;
+            
+            const forzar_cambio_pw = confirm("¿Desea forzar al administrador a cambiar su contraseña al iniciar sesión por primera vez?\n(Si cancela, usará la contraseña temporal permanentemente)");
+            
+            createEmpresa(tenant_id, nombre_empresa, nombre_admin, correo_electronico, password, forzar_cambio_pw); 
+        }
+
+        async function createEmpresa(tenant_id, nombre_empresa, nombre_admin, correo_electronico, password, forzar_cambio_pw) {  
+            const data = { 
+                tenant_id, 
+                nombre_empresa, 
+                nombre_admin, 
+                correo_electronico, 
+                password,
+                forzar_cambio_pw
+            };
+
+            try {
+                const response = await fetch(API_URL_REGISTER, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert(`Puesto/Empresa '${nombre_empresa}' creado exitosamente!`);
+                    loadEmpresas(); 
+                } else if (response.status === 409 || response.status === 400) { 
+                    alert('Fallo de Registro: ' + (result.message || 'Error en la validación de datos.'));
+                }
+                else {
+                    alert('Error al crear empresa: ' + (result.message || 'Error desconocido del servidor.'));
+                }
+            } catch (e) {
+                alert('Error de conexión con el servidor al crear empresa.');
+            }
+        }
+        
+        async function deleteEmpresa(tenantId, nombreEmpresa) {
+            if (!confirm(`¿Estás seguro de ELIMINAR permanentemente la empresa "${nombreEmpresa}" (ID: ${tenantId}) y todos sus datos?`)) {
+                return; 
+            }
+
+            try {
+                const response = await fetch(`http://localhost:4000/api/empresa/${tenantId}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert(result.message);
+                    loadEmpresas(); 
+                } else {
+                    alert('Error al eliminar: ' + (result.message || 'Error desconocido.'));
+                }
+            } catch (e) {
+                alert('Error de conexión con el servidor al intentar eliminar.');
+            }
+        }
+
+        loadEmpresas(); 
+    </script>
+</body>
+</html>

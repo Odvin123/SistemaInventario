@@ -1,0 +1,137 @@
+<body>
+    <div id="login-container">
+        <h2>Acceso al Sistema</h2>
+        <form id="loginForm">
+            <label for="tenantId">ID de Puesto/Empresa (Tenant ID):</label>
+            <input type="text" id="tenantId" required><br><br>
+
+            <label for="email">Correo Electrónico:</label>
+            <input type="email" id="email" required><br><br>
+
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required><br><br>
+
+            <button type="submit" id="loginButton">Iniciar Sesión</button>
+            <p id="lockoutMessage" style="color: red; display: none; margin-top: 10px;">Demasiados intentos fallidos. Intente de nuevo en <span id="countdown">10</span> segundos.</p>
+        </form>
+    </div>
+
+    <script>
+        const API_URL_LOGIN = 'http://localhost:4000/api/login';
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const lockoutMessage = document.getElementById('lockoutMessage');
+        const countdownSpan = document.getElementById('countdown');
+        const passwordInput = document.getElementById('password');
+        
+        // Variables para el control de intentos fallidos
+        let failCount = 0;
+        const MAX_ATTEMPTS = 3;
+        const LOCKOUT_DURATION_MS = 10000; 
+        let isLocked = false;
+
+
+        function setLockout(duration) {
+            isLocked = true;
+            failCount = 0; 
+            
+            document.getElementById('tenantId').disabled = true;
+            document.getElementById('email').disabled = true;
+            document.getElementById('password').disabled = true;
+            loginButton.disabled = true;
+            
+            lockoutMessage.style.display = 'block';
+
+            let countdown = duration / 1000;
+            countdownSpan.textContent = countdown;
+            
+            const timer = setInterval(() => {
+                countdown--;
+                countdownSpan.textContent = countdown;
+
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    unlockForm();
+                }
+            }, 1000);
+        }
+
+        function unlockForm() {
+            isLocked = false;
+            
+            document.getElementById('tenantId').disabled = false;
+            document.getElementById('email').disabled = false;
+            document.getElementById('password').disabled = false;
+            loginButton.disabled = false;
+            
+            lockoutMessage.style.display = 'none';
+            alert('El bloqueo temporal ha finalizado. Puede intentar iniciar sesión de nuevo.');
+        }
+
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (isLocked) {
+                alert('El formulario está bloqueado temporalmente. Por favor, espere.');
+                return;
+            }
+
+            const tenant_id = document.getElementById('tenantId').value;
+            const correo_electronico = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const data = { tenant_id, correo_electronico, password };
+
+            try {
+                const response = await fetch(API_URL_LOGIN, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    failCount = 0; 
+                    sessionStorage.setItem('userRol', result.rol);
+                    sessionStorage.setItem('tenantId', result.tenant_id);
+                    
+                    if (result.necesitaCambioPw) {
+                        alert("Por seguridad, debe establecer una nueva contraseña.");
+                        window.location.href = `cambio_pw.html?tenant=${result.tenant_id}&email=${correo_electronico}`;
+                    } else {
+                        if (result.rol === 'super_admin') {
+                            window.location.href = 'superadmin_dashboard.html';
+                        } else {
+                            window.location.href = 'inventario_dashboard.html';
+                        }
+                    }
+
+                } else {
+                    // Fallo: Incrementar contador de fallos
+                    failCount++;
+                    
+                    alert('Error de Login: ' + (result.message || 'Credenciales o Puesto/Empresa inválido.'));
+
+                    if (failCount >= MAX_ATTEMPTS) {
+                        setLockout(LOCKOUT_DURATION_MS);
+                    } else {
+                        const remaining = MAX_ATTEMPTS - failCount;
+                        alert(`Intento fallido. Le quedan ${remaining} intentos antes del bloqueo temporal.`);
+                    }
+                }
+            } catch (e) {
+                alert('Error de conexión con el servidor (API no responde).');
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenant = urlParams.get('tenant');
+            if (tenant) {
+                document.getElementById('tenantId').value = tenant;
+            }
+        });
+    </script>
+</body>
