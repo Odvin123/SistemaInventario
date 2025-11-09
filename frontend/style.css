@@ -1,0 +1,357 @@
+/* RESET & VARIABLES */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #1e293b;
+  --light: #f8fafc;
+  --gray: #64748b;
+  --light-gray: #e2e8f0;
+  --white: #ffffff;
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  line-height: 1.6;
+  color: var(--secondary);
+  background-color: var(--white);
+  overflow-x: hidden;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* NAVBAR */
+.navbar {
+  background-color: var(--white);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  padding: 1rem 0;
+}
+
+.navbar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.logo span {
+  color: var(--secondary);
+}
+
+.nav-menu {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: var(--secondary);
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.nav-menu a:hover {
+  color: var(--primary);
+}
+
+.btn-login {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.btn-login:hover {
+  background-color: var(--primary-dark);
+}
+
+.hamburger {
+  display: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* HERO */
+.hero {
+  position: relative;
+  padding: 120px 0 80px;
+  text-align: center;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Imagen de fondo con blur */
+.hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(''); 
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px); /* Hace la imagen suave y no distrae del texto */
+  z-index: -1;
+  /* filter: brightness(100%);  */
+}
+
+
+
+/* Overlay opcional para mejorar legibilidad */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.75); /* Fondo blanco semi-transparente */
+  z-index: -1;
+}
+
+.hero .container {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--secondary);
+  opacity: 0;
+  animation: fadeInUp 0.8s forwards;
+}
+
+.hero .subtitle {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+  opacity: 0;
+  animation: fadeInUp 0.8s 0.2s forwards;
+}
+
+.hero .value-prop {
+  margin: 0 auto 2rem;
+  font-size: 1.1rem;
+  opacity: 0;
+  animation: fadeInUp 0.8s 0.4s forwards;
+}
+
+.cta-buttons {
+  opacity: 0;
+  animation: fadeIn 1s 0.6s forwards;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.8rem 1.8rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 0.5rem;
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.btn.primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn.primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.btn.secondary {
+  background-color: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn.secondary:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+  transform: translateY(-2px);
+}
+
+/* SECTIONS */
+.section {
+  padding: 80px 0;
+}
+
+.section h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 3rem;
+  color: var(--secondary);
+  opacity: 0;
+  animation: fadeIn 0.8s forwards;
+}
+
+.bg-light {
+  background-color: var(--light);
+}
+
+/* PROBLEMA Y SOLUCIÓN */
+.problem-solution {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.problem, .solution {
+  flex: 1;
+  min-width: 300px;
+  padding: 1.5rem;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  opacity: 0;
+  animation: fadeInUp 0.8s forwards;
+}
+
+.solution {
+  animation-delay: 0.2s;
+}
+
+/* CARACTERÍSTICAS */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.feature-item {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  opacity: 0;
+  animation: fadeInUp 0.8s forwards;
+}
+
+.feature-item h3 {
+  margin-bottom: 0.8rem;
+  color: var(--secondary);
+}
+
+/* FORMULARIO DE CONTACTO */
+.contact-form {
+  max-width: 600px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-form input {
+  padding: 0.8rem;
+  border: 1px solid var(--light-gray);
+  border-radius: 6px;
+  font-family: 'Lato', sans-serif;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.contact-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* FOOTER */
+footer {
+  background-color: var(--secondary);
+  color: var(--white);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.copyright {
+  margin-bottom: 0.8rem;
+}
+
+.footer-links a {
+  color: var(--light-gray);
+  margin: 0 0.8rem;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.footer-links a:hover {
+  color: var(--white);
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-menu {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: none;
+  }
+
+  .nav-menu.active {
+    display: flex;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero .subtitle {
+    font-size: 1.2rem;
+  }
+}
