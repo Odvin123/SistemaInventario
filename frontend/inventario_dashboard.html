@@ -4,145 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración de Inventario</title>
-    <style>
-        /* --- ESTILOS GENERALES --- */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e9ecef; color: #343a40; margin: 0; padding: 0; }
-        .container { max-width: 1400px; margin: 30px auto; padding: 20px; }
-        
-        /* --- MENÚ SUPERIOR (Navegación) --- */
-        .top-menu { 
-            background-color: #f8f9fa; 
-            border-bottom: 1px solid #dee2e6;
-            padding: 5px 0;
-            display: flex;
-            gap: 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            justify-content: space-between; 
-            align-items: center;
-        }
-        .menu-left { display: flex; gap: 0; }
-        .menu-item {
-            padding: 8px 15px;
-            text-decoration: none;
-            color: #343a40;
-            font-weight: 500;
-            border-right: 1px solid #e9ecef;
-            transition: background-color 0.2s;
-            position: relative;
-        }
-        .menu-item:hover, .menu-item.active {
-            background-color: #e2e6ea;
-            color: #000;
-        }
-
-        /* ESTILO PARA CERRAR SESIÓN */
-        .logout-link {
-            padding: 8px 20px;
-            color: #dc3545 !important;
-            font-weight: bold;
-            border-left: 1px solid #e9ecef;
-            border-right: none;
-        }
-        .logout-link:hover {
-            background-color: #f8d7da !important;
-            color: #721c24 !important;
-        }
-
-        /* --- SUBMENÚ DESPLEGABLE PRINCIPAL (CATÁLOGOS) --- */
-        .dropdown { position: relative; display: inline-block; }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 180px; 
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1001;
-            border-radius: 4px;
-            top: 100%; 
-            left: 0;
-        }
-        .dropdown-content a {
-            color: black;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            text-align: left;
-            font-size: 0.9rem;
-        }
-        .dropdown-content a:hover { background-color: #f1f1f1; }
-        .dropdown:hover > .dropdown-content { display: block; }
-
-        /* --- SUBMENÚ ANIDADO (PRODUCTOS) --- */
-        .dropdown-nested {
-            position: relative; 
-        }
-        .dropdown-nested .dropdown-content {
-            top: 0; 
-            left: 100%; 
-            border-left: 1px solid #ccc;
-        }
-        .dropdown-nested:hover > .dropdown-content { 
-            display: block; 
-        }
-
-        /* OTRAS SECCIONES */
-        .view-content { display: none; } 
-        .view-content.active { display: block; } 
-        .dashboard-header { 
-            background: linear-gradient(to right, #007bff, #0056b3); 
-            color: white; 
-            padding: 20px 40px; 
-            border-radius: 10px; 
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .header-left h1 { margin: 0; font-size: 2.2rem; }
-        .header-left p { margin: 5px 0 0; font-size: 1.1rem; opacity: 0.9; }
-        .logo-upload-container { display: none; } 
-        .main-content { display: flex; gap: 20px; }
-        .inventory-section {
-            flex: 3; 
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            width: 100%; 
-        }
-        .inventory-section h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .sidebar-section {
-            flex: 1; 
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .stats-card, .quick-actions-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            text-align: center;
-        }
-        .stats-card p { font-size: 1.5rem; font-weight: bold; color: #6c757d; margin: 5px 0; }
-        .stats-card small { color: #6c757d; }
-        .btn-add-product { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; font-weight: bold; transition: background-color 0.3s; }
-        .btn-add-product:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 0.9rem; }
-        th { background-color: #007bff; color: white; }
-        .actions-cell button { margin-right: 5px; padding: 6px 10px; cursor: pointer; border-radius: 4px; border: none; font-size: 0.85rem; }
-        .btn-edit { background-color: #ffc107; color: #343a40; }
-        .btn-delete { background-color: #dc3545; color: white; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close { color: #aaa; float: right; font-size: 30px; font-weight: bold; }
-        .close:hover, .close:focus { color: #343a40; text-decoration: none; cursor: pointer; }
-        .modal-content label { display: block; margin-top: 10px; font-weight: bold;}
-        .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="inventario_dashboard.css" />
 </head>
 <body>
     
@@ -153,9 +16,8 @@
             <div class="dropdown">
                 <a href="#" class="menu-item active">Catálogos</a>
                 <div class="dropdown-content">
-                    
                     <div class="dropdown-nested">
-                        <a href="#" class="menu-item-nested">Productos &gt;</a> 
+                        <a href="#" class="menu-item-nested">Productos ></a> 
                         <div class="dropdown-content">
                             <a href="#" onclick="showView('categorias-view')">Categorías</a> 
                             <a href="#" onclick="showView('inventario-view'); openProductModal();">Registrar Producto</a> 
@@ -217,8 +79,8 @@
                     </div>
                     <div class="quick-actions-card">
                         <h4>Acciones Rápidas</h4>
-                        <button style="width: 100%; margin-bottom: 10px;" class="btn-edit">Exportar (CSV)</button>
-                        <button style="width: 100%;" class="btn-delete">Reporte de Stock Bajo</button>
+                        <button class="btn-export">Exportar (CSV)</button>
+                        <button class="btn-low-stock">Reporte de Stock Bajo</button>
                     </div>
                 </div>
             </div>
@@ -227,13 +89,13 @@
         <div id="categorias-view" class="view-content">
             <div class="container">
                 <div class="inventory-section">
-                    <button class="btn-add-product" style="background-color: #6c757d; margin-right: 10px;" onclick="showView('inventario-view')">⬅️ Volver al Inventario</button>
+                    <button class="btn-back" onclick="showView('inventario-view')">⬅️ Volver al Inventario</button>
                     <button class="btn-add-product" onclick="openCategoriaModal()">➕ Crear Nueva Categoría</button>
 
                     <h2>Gestión de Categorías de Productos</h2>
                     <div id="loading-categ" style="color: blue; text-align: center; display:none;">Cargando categorías...</div>
 
-                    <table id="categorias-table" class="table">
+                    <table id="categorias-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -254,11 +116,7 @@
         <div id="proveedores-view" class="view-content">
             <div class="container">
                 <div class="inventory-section">
-                    <button class="btn-add-product" 
-                        style="background-color: #6c757d; margin-right: 10px;" 
-                        onclick="showView('inventario-view')">
-                        ⬅️ Volver al Inicio
-                    </button>
+                    <button class="btn-back" onclick="showView('inventario-view')">⬅️ Volver al Inicio</button>
                     <button class="btn-add-product" onclick="openProveedorModal()">➕ Agregar Nuevo Proveedor</button>
                     
                     <h2>Gestión de Proveedores</h2>
@@ -287,39 +145,32 @@
 
     </div> 
 
+    <!-- MODALES -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeProductModal()">&times;</span>
             <h3 id="modal-title">Agregar Nuevo Producto</h3>
             <form id="productForm">
                 <input type="hidden" id="product-id">
-                
                 <label for="clave">Clave/ID:</label>
                 <input type="text" id="clave" disabled value="Auto-Generada" style="background-color: #f1f1f1; color: #555;"> 
-                
                 <label for="proveedor_id">Proveedor:</label>
                 <select id="proveedor_id" required>
                     <option value="">-- Seleccionar Proveedor --</option> 
                 </select>
-                
                 <label for="categoria_id">Categoría:</label>
                 <select id="categoria_id" required>
                     <option value="">-- Seleccionar Categoría --</option>
                 </select>
-
                 <label for="descripcion">Descripción:</label> 
                 <textarea id="descripcion" required></textarea>
-                
                 <label for="stock">Stock (Enteros):</label>
                 <input type="number" id="stock" required min="0" step="1">
-                
                 <label for="costo">Costo (Precio de Compra, Decimal):</label>
                 <input type="number" id="costo" step="0.01" required min="0">
-                
                 <label for="precio">Precio (Precio de Venta, Decimal):</label>
                 <input type="number" id="precio" step="0.01" required min="0">
-                
-                <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Producto</button>
+                <button type="submit" class="btn-add-product">Guardar Producto</button>
             </form>
         </div>
     </div>
@@ -336,7 +187,7 @@
                 <input type="text" id="proveedor_telefono">
                 <label for="proveedor_correo">Correo Electrónico:</label>
                 <input type="email" id="proveedor_correo">
-                <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Proveedor</button>
+                <button type="submit" class="btn-add-product">Guardar Proveedor</button>
             </form>
         </div>
     </div>
@@ -349,12 +200,14 @@
                 <input type="hidden" id="categ-id"> 
                 <label for="categ_nombre">Nombre de la Categoría:</label>
                 <input type="text" id="categ_nombre" required>
-                <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Categoría</button>
+                <button type="submit" class="btn-add-product">Guardar Categoría</button>
             </form>
         </div>
     </div>
 
-
+   
+   
+   
     <script>
         const API_URL = 'http://localhost:4000/api';
         

@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cambio de Contraseña Obligatorio</title>
+    <link rel="stylesheet" href="cambio_pw.css">
 </head>
 <body>
     <div style="padding: 20px; max-width: 400px; margin: 50px auto; border: 1px solid #ccc; border-radius: 8px;">
         <h2>Establecer Nueva Contraseña</h2>
         <p>Estás usando una contraseña temporal. Por favor, crea una nueva contraseña segura.</p>
+        <p>6 digitos minimo</p>
         
         <form id="changePasswordForm">
             <label for="newPassword">Nueva Contraseña:</label>
+
             <input type="password" id="newPassword" required style="width: 100%; padding: 8px; margin-bottom: 10px;" minlength="6"><br>
             
             <label for="confirmPassword">Confirmar Contraseña:</label>
