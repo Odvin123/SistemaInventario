@@ -9,6 +9,9 @@ const db = require('./db');
 const app = express();
 const port = process.env.PORT || 4000;
 
+// IMPORTACIÓN DE RUTAS MODULARES
+const proveedoresRouter = require('./routes/proveedores'); 
+
 // Configuración del servicio de correo
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_SERVICE_HOST,
@@ -32,9 +35,7 @@ const verifyToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
         req.usuario = decoded; 
-        
         next(); 
 
     } catch (err) {
@@ -62,20 +63,20 @@ app.get('/', (req, res) => {
 });
 
 
+app.use('/api/admin/proveedores', proveedoresRouter); 
+
+
 // Evitar Duplicados de Tenant ID
 app.get('/api/check-tenant/:tenantId', async (req, res) => {
     const { tenantId } = req.params;
-
     if (!tenantId) {
         return res.status(400).json({ exists: false, message: 'Tenant ID es obligatorio.' });
     }
-
     try {
         const result = await db.query(
             'SELECT tenant_id FROM empresas WHERE tenant_id = $1',
             [tenantId]
         );
-
         if (result.rowCount > 0) {
             return res.json({ exists: true, message: 'El Tenant ID ya está en uso.' });
         } else {
@@ -86,14 +87,14 @@ app.get('/api/check-tenant/:tenantId', async (req, res) => {
         res.status(500).json({ exists: false, message: 'Error interno del servidor.' });
     }
 });
+
 //Cambio de Contraseña Forzado
 app.post('/api/cambio-pw-forzado', async (req, res) => {
     const { tenant_id, correo_electronico, new_password } = req.body;
-
+    // ... (El cuerpo de la función sigue siendo el mismo) ...
     if (!tenant_id || !correo_electronico || !new_password) {
         return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
     }
-
     try {
         const userResult = await db.query(
             `SELECT u.id 
@@ -104,13 +105,11 @@ app.post('/api/cambio-pw-forzado', async (req, res) => {
              AND u.necesita_cambio_pw = TRUE`, 
             [correo_electronico, tenant_id]
         );
-
         if (userResult.rowCount === 0) {
             return res.status(404).json({ success: false, message: 'Solicitud de cambio inválida o ya procesada.' });
         }
         
         const userId = userResult.rows[0].id;
-
         const newPasswordHash = await bcrypt.hash(new_password, 10);
 
         await db.query(
@@ -131,7 +130,7 @@ app.post('/api/cambio-pw-forzado', async (req, res) => {
 //Registros y Login de los Usuarios
 app.post('/api/login', async (req, res) => {
     const { tenant_id, correo_electronico, password } = req.body;
-
+    // ... (El cuerpo de la función sigue siendo el mismo) ...
     if (!tenant_id || !correo_electronico || !password) {
         return res.status(400).json({ success: false, message: 'Faltan credenciales.' });
     }
@@ -150,7 +149,8 @@ app.post('/api/login', async (req, res) => {
         }
 
         const usuario = result.rows[0];
-        const passwordMatch = await bcrypt.compare(password, usuario.password_hash);
+        // Nota: Asegúrate de que estás usando bcrypt.compare(password, hash)
+        const passwordMatch = await bcrypt.compare(password, usuario.password_hash); 
 
         if (!passwordMatch) {
             return res.status(401).json({ success: false, message: 'Credenciales inválidas o Tenant ID incorrecto.' });
@@ -181,7 +181,6 @@ app.post('/api/login', async (req, res) => {
 
 //Eliminación de Empresas y todos sus Usuarios
 app.delete('/api/empresa/:tenantId', verifyToken, async (req, res) => {
-    
     if (req.usuario.rol !== 'super_admin') {
         return res.status(403).json({ 
             success: false, 
@@ -224,7 +223,6 @@ app.delete('/api/empresa/:tenantId', verifyToken, async (req, res) => {
 //Registro de Nuevas Empresas y Administradores
 app.post('/api/register', async (req, res) => {
     const { tenant_id, nombre_empresa, nombre_admin, correo_electronico, password, forzar_cambio_pw } = req.body; 
-    
     const emailRegex = /^[^\s@]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/i;
 
     if (!emailRegex.test(correo_electronico)) {
@@ -285,7 +283,7 @@ app.post('/api/register', async (req, res) => {
             `INSERT INTO usuarios 
              (empresa_id, nombre, correo_electronico, password_hash, rol, necesita_cambio_pw) 
              VALUES ($1, $2, $3, $4, $5, $6)`, 
-            [empresaId, nombre_admin, correo_electronico, passwordHash, 'administrador', necesitaCambioPw] // <-- Usa el valor dinámico
+            [empresaId, nombre_admin, correo_electronico, passwordHash, 'administrador', necesitaCambioPw] 
         );
 
         await client.query('COMMIT');
@@ -309,10 +307,8 @@ app.post('/api/register', async (req, res) => {
 });
 
 
-
 // Listado de Empresas para SuperAdmin
 app.get('/api/admin/empresas', verifyToken, async (req, res) => { 
-    
     if (req.usuario.rol !== 'super_admin') {
         return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
     }
@@ -339,10 +335,8 @@ app.get('/api/admin/empresas', verifyToken, async (req, res) => {
 });
 
 //Resetear Contraseña de Administrador por SuperAdmin
-
 app.post('/api/admin/reset-pw', verifyToken, async (req, res) => {
     const { tenant_id, correo_electronico, new_password } = req.body;
-
     if (req.usuario.rol !== 'super_admin') {
         return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
     }
@@ -416,6 +410,7 @@ app.post('/api/admin/reset-pw', verifyToken, async (req, res) => {
         res.status(500).json({ success: false, message: 'Error interno al procesar el reseteo y/o enviar el correo.' });
     }
 });
+
 
 app.listen(port, () => {
     console.log(`Backend API escuchando en http://localhost:${port}`);

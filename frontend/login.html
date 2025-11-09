@@ -94,6 +94,11 @@
                 
                 if (response.ok && result.success) {
                     failCount = 0; 
+                    localStorage.setItem('token', result.token); 
+                    localStorage.setItem('rol', result.rol);     
+                    localStorage.setItem('tenant_id', result.tenant_id);
+
+                    
                     sessionStorage.setItem('authToken', result.token); 
                     sessionStorage.setItem('userRol', result.rol);
                     sessionStorage.setItem('tenantId', result.tenant_id);
