@@ -11,6 +11,8 @@ const port = process.env.PORT || 4000;
 
 // IMPORTACIÓN DE RUTAS MODULARES
 const proveedoresRouter = require('./routes/proveedores'); 
+const clasificacionesRouter = require('./routes/clasificaciones'); 
+const productosRouter = require('./routes/productos');
 
 // Configuración del servicio de correo
 const transporter = nodemailer.createTransport({
@@ -63,7 +65,10 @@ app.get('/', (req, res) => {
 });
 
 
+// Rutas Modulares
 app.use('/api/admin/proveedores', proveedoresRouter); 
+app.use('/api/admin/clasificaciones', clasificacionesRouter);
+app.use('/api/admin/productos', productosRouter);
 
 
 // Evitar Duplicados de Tenant ID

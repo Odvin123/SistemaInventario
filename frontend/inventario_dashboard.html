@@ -67,39 +67,15 @@
             border-radius: 10px; 
             margin-bottom: 30px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start; /* Alineación cambiada */
             align-items: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .header-left h1 { margin: 0; font-size: 2.2rem; }
         .header-left p { margin: 5px 0 0; font-size: 1.1rem; opacity: 0.9; }
 
-        /* --- LOGO Y OPCIÓN DE SUBIDA --- */
-        .logo-upload-container {
-            text-align: center;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: rgba(255, 255, 255, 0.2);
-            position: relative;
-        }
-        #company-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid white;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        #company-logo:hover { transform: scale(1.05); }
-        .logo-upload-container label {
-            cursor: pointer;
-            font-size: 0.85rem;
-            margin-top: 5px;
-            display: block;
-            opacity: 0.8;
-        }
-        #logo-input { display: none; }
+        /* --- LOGO Y OPCIÓN DE SUBIDA (Ocultos) --- */
+        .logo-upload-container { display: none; } 
         
         /* --- CONTENEDOR PRINCIPAL DE BLOQUES --- */
         .main-content { display: flex; gap: 20px; }
@@ -133,8 +109,7 @@
         .stats-card small { color: #6c757d; }
 
         /* --- BOTONES Y TABLA --- */
-        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; }
-        .btn-logout:hover { background-color: #c82333; }
+        .btn-logout { display: none; }
         .btn-add-product { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; font-weight: bold; transition: background-color 0.3s; }
         .btn-add-product:hover { background-color: #218838; }
         
@@ -188,24 +163,11 @@
                     <p>Gestión de Inventario de <span id="company-name-display">Tu Empresa</span></p>
                 </div>
                 
-                <div class="logo-upload-container">
-                    <label for="logo-input">
-                        <img id="company-logo" src="default-logo.png" alt="Logo de la Empresa">
-                        <small>Cambiar Logo</small>
-                    </label>
-                    <input type="file" id="logo-input" accept="image/*" onchange="previewLogo(event)">
                 </div>
-
-                <div>
-                    <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
-                </div>
-            </div>
             
             <div class="container main-content">
                 
                 <div class="inventory-section">
-                    <button class="btn-add-product" onclick="openProductModal()">➕ Agregar Nuevo Producto</button>
-
                     <h2>Inventario Actual</h2>
                     <table id="inventory-table">
                         <thead>
@@ -328,17 +290,17 @@
     <script>
         const API_URL = 'http://localhost:4000/api';
         
-        // 🔑 LECTURA DE LA SESIÓN JWT
+        
         let token = localStorage.getItem('token');
         let tenantId = localStorage.getItem('tenant_id');
         let rol = localStorage.getItem('rol'); 
 
-        // Cache para almacenar temporalmente los proveedores cargados (útil para la edición)
+
         let proveedoresCache = []; 
 
-        // 1. FUNCIONES DE VISTA Y NAVEGACIÓN
+
         function showView(viewId) {
-            // Oculta todas las vistas
+
             const views = document.querySelectorAll('.view-content');
             views.forEach(view => view.classList.remove('active'));
 
