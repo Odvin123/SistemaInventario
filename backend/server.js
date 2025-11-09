@@ -11,7 +11,7 @@ const port = process.env.PORT || 4000;
 
 // IMPORTACIÓN DE RUTAS MODULARES
 const proveedoresRouter = require('./routes/proveedores'); 
-const clasificacionesRouter = require('./routes/clasificaciones'); 
+const categoriasRouter = require('./routes/Categorias');
 const productosRouter = require('./routes/productos');
 
 // Configuración del servicio de correo
@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 
 // Rutas Modulares
 app.use('/api/admin/proveedores', proveedoresRouter); 
-app.use('/api/admin/clasificaciones', clasificacionesRouter);
+app.use('/api/admin/categorias', categoriasRouter);
 app.use('/api/admin/productos', productosRouter);
 
 

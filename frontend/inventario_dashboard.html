@@ -70,22 +70,22 @@
             font-size: 0.9rem;
         }
         .dropdown-content a:hover { background-color: #f1f1f1; }
-        .dropdown:hover > .dropdown-content { display: block; } /* Modificado para submenús */
+        .dropdown:hover > .dropdown-content { display: block; }
 
         /* --- SUBMENÚ ANIDADO (PRODUCTOS) --- */
         .dropdown-nested {
-            position: relative; /* Contenedor del sub-submenú */
+            position: relative; 
         }
         .dropdown-nested .dropdown-content {
-            top: 0; /* Alineado al tope */
-            left: 100%; /* Desplazado a la derecha */
+            top: 0; 
+            left: 100%; 
             border-left: 1px solid #ccc;
         }
         .dropdown-nested:hover > .dropdown-content { 
             display: block; 
         }
 
-        /* OTRAS SECCIONES (sin cambios) */
+        /* OTRAS SECCIONES */
         .view-content { display: none; } 
         .view-content.active { display: block; } 
         .dashboard-header { 
@@ -139,7 +139,7 @@
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .close { color: #aaa; float: right; font-size: 30px; font-weight: bold; }
         .close:hover, .close:focus { color: #343a40; text-decoration: none; cursor: pointer; }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
     </style>
 </head>
@@ -156,7 +156,7 @@
                     <div class="dropdown-nested">
                         <a href="#" class="menu-item-nested">Productos &gt;</a> 
                         <div class="dropdown-content">
-                            <a href="#" onclick="showView('clasificaciones-view')">Clasificaciones</a>
+                            <a href="#" onclick="showView('categorias-view')">Categorías</a> 
                             <a href="#" onclick="showView('registrar-producto-view')">Registrar Producto</a>
                         </div>
                     </div>
@@ -224,35 +224,25 @@
             </div>
         </div> 
 
-        <div id="clasificaciones-view" class="view-content">
+        <div id="categorias-view" class="view-content">
             <div class="container">
                 <div class="inventory-section">
                     <button class="btn-add-product" style="background-color: #6c757d; margin-right: 10px;" onclick="showView('inventario-view')">⬅️ Volver al Inventario</button>
-                    <h2>Clasificaciones de Productos</h2>
-                    <p style="color: #007bff; font-weight: bold;">Aquí se gestionarán los Rubros, Categorías y Subcategorías.</p>
-                    <table class="table">
+                    <button class="btn-add-product" onclick="openCategoriaModal()">➕ Crear Nueva Categoría</button>
+
+                    <h2>Gestión de Categorías de Productos</h2>
+                    <div id="loading-categ" style="color: blue; text-align: center; display:none;">Cargando categorías...</div>
+
+                    <table id="categorias-table" class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Clasificación</th>
-                                <th>Productos Relacionados</th>
+                                <th>Nombre de la Categoría</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>Electrónica</td>
-                                <td>54</td>
-                                <td><button class="btn-edit">Editar</button></td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>Hogar</td>
-                                <td>121</td>
-                                <td><button class="btn-edit">Editar</button></td>
-                            </tr>
-                            <tr><td colspan="4" style="text-align: center;">Funcionalidad pendiente.</td></tr>
+                        <tbody id="categorias-tbody">
+                            <tr><td colspan="3" style="text-align: center;">Haz clic en el botón para cargar las categorías.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -284,7 +274,7 @@
                             </tr>
                         </thead>
                         <tbody id="proveedores-tbody">
-                            <tr><td colspan="5" style="text-align: center;">Cargando proveedores...</td></tr>
+                            <tr><td colspan="5" style="text-align: center;">Haz clic en el botón para cargar los proveedores.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -303,16 +293,19 @@
             <h3 id="modal-title">Agregar Nuevo Producto</h3>
             <form id="productForm">
                 <input type="hidden" id="product-id">
-                <label for="sku">SKU / Código:</label>
-                <input type="text" id="sku" required>
+                
                 <label for="nombre_producto">Nombre del Producto:</label>
                 <input type="text" id="nombre_producto" required>
+                
                 <label for="descripcion">Descripción (opcional):</label> 
                 <textarea id="descripcion"></textarea>
+                
                 <label for="cantidad">Cantidad:</label>
                 <input type="number" id="cantidad" required min="0">
+                
                 <label for="precio">Precio:</label>
                 <input type="number" id="precio" step="0.01" required min="0">
+                
                 <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Producto</button>
             </form>
         </div>
@@ -335,6 +328,19 @@
         </div>
     </div>
 
+    <div id="categoriaModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCategoriaModal()">&times;</span>
+            <h3 id="categ-modal-title">Crear Nueva Categoría</h3>
+            <form id="categoriaForm">
+                <input type="hidden" id="categ-id"> 
+                <label for="categ_nombre">Nombre de la Categoría:</label>
+                <input type="text" id="categ_nombre" required>
+                <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Categoría</button>
+            </form>
+        </div>
+    </div>
+
 
     <script>
         const API_URL = 'http://localhost:4000/api';
@@ -344,6 +350,7 @@
         let rol = localStorage.getItem('rol'); 
 
         let proveedoresCache = []; 
+        let categoriasCache = []; 
 
         function showView(viewId) {
             const views = document.querySelectorAll('.view-content');
@@ -351,8 +358,11 @@
 
             document.getElementById(viewId).classList.add('active');
             
+            // Carga dinámica de datos al cambiar de vista
             if (viewId === 'proveedores-view') {
                 loadProveedores();
+            } else if (viewId === 'categorias-view') { 
+                loadCategorias(); 
             } else if (viewId === 'registrar-producto-view') {
                 openProductModal();
                 showView('inventario-view'); 
@@ -365,13 +375,30 @@
                 window.location.href = 'login.html'; 
             }
         }
+        
+        // ----------------------------------------------
+        // --- LÓGICA DE PROVEEDORES (CRUD COMPLETO) ---
+        // ----------------------------------------------
+        
+        function openProveedorModal(id = null) {
+            const modal = document.getElementById('proveedorModal');
+            const title = document.getElementById('proveedor-modal-title');
+            const idInput = document.getElementById('proveedor-id');
 
-        // --- LÓGICA DE PROVEEDOR ---
-        function openProveedorModal() {
-            document.getElementById('proveedor-modal-title').textContent = 'Agregar Nuevo Proveedor';
-            document.getElementById('proveedor-id').value = ''; 
-            document.getElementById('proveedorForm').reset();
-            document.getElementById('proveedorModal').style.display = 'block';
+            if (id) {
+                const proveedor = proveedoresCache.find(p => p.id == id);
+                if (!proveedor) { alert('Error: Proveedor no encontrado.'); return; }
+                title.textContent = `Editar Proveedor (ID: ${id})`;
+                idInput.value = proveedor.id;
+                document.getElementById('proveedor_nombre').value = proveedor.nombre;
+                document.getElementById('proveedor_telefono').value = proveedor.telefono || '';
+                document.getElementById('proveedor_correo').value = proveedor.correo_contacto || '';
+            } else {
+                title.textContent = 'Agregar Nuevo Proveedor';
+                idInput.value = ''; 
+                document.getElementById('proveedorForm').reset();
+            }
+            modal.style.display = 'block';
         }
         
         function closeProveedorModal() {
@@ -437,34 +464,41 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    proveedoresCache = data.proveedores;
                     renderProveedores(data.proveedores);
                 } else {
-                    alert('Error al cargar proveedores: ' + data.message);
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error al cargar datos.</td></tr>';
                 }
             } catch (error) {
-                console.error('Error de conexión:', error);
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error de conexión con el servidor.</td></tr>';
             }
         }
 
-        function editProveedor(id) {
-            const proveedor = proveedoresCache.find(p => p.id == id);
+        function renderProveedores(proveedores) {
+            const tbody = document.getElementById('proveedores-tbody');
+            tbody.innerHTML = '';
             
-            if (!proveedor) {
-                alert('Error: Datos del proveedor no encontrados.');
+            if (proveedores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay proveedores registrados.</td></tr>';
                 return;
             }
 
-            document.getElementById('proveedor-modal-title').textContent = 'Editar Proveedor (ID: ' + id + ')';
-            document.getElementById('proveedor-id').value = proveedor.id; 
-            document.getElementById('proveedor_nombre').value = proveedor.nombre;
-            document.getElementById('proveedor_telefono').value = proveedor.telefono || '';
-            document.getElementById('proveedor_correo').value = proveedor.correo_contacto || '';
-            
-            document.getElementById('proveedorModal').style.display = 'block';
+            proveedores.forEach(proveedor => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${proveedor.id}</td>
+                    <td>${proveedor.nombre}</td>
+                    <td>${proveedor.telefono || 'N/A'}</td>
+                    <td>${proveedor.correo_contacto || 'N/A'}</td>
+                    <td class="actions-cell">
+                        <button class="btn-edit" onclick="openProveedorModal(${proveedor.id})">Editar</button>
+                        <button class="btn-delete" onclick="deleteProveedor(${proveedor.id}, '${proveedor.nombre}')">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
-
+        
         async function deleteProveedor(id, name) {
             if (!confirm(`¿Está seguro de que desea eliminar al proveedor "${name}" (ID: ${id})? Esta acción es irreversible.`)) {
                 return;
@@ -488,56 +522,184 @@
                 alert('Error de conexión con el servidor.');
             }
         }
-        
-        function renderProveedores(proveedores) {
-            proveedoresCache = proveedores; 
-            
-            const tbody = document.getElementById('proveedores-tbody');
+
+
+        // ----------------------------------------------
+        // --- LÓGICA DE CATEGORÍAS (CRUD COMPLETO) ---
+        // ----------------------------------------------
+
+        function openCategoriaModal(id = null) {
+            const modal = document.getElementById('categoriaModal');
+            const title = document.getElementById('categ-modal-title');
+            const idInput = document.getElementById('categ-id');
+            const nameInput = document.getElementById('categ_nombre');
+
+            if (id) {
+                const categoria = categoriasCache.find(c => c.id == id);
+                if (!categoria) { alert('Error: Datos de categoría no encontrados.'); return; }
+                title.textContent = `Editar Categoría (ID: ${id})`;
+                idInput.value = categoria.id;
+                nameInput.value = categoria.nombre;
+            } else {
+                title.textContent = 'Crear Nueva Categoría';
+                idInput.value = '';
+                nameInput.value = '';
+            }
+            modal.style.display = 'block';
+        }
+
+        function closeCategoriaModal() {
+            document.getElementById('categoriaModal').style.display = 'none';
+            document.getElementById('categoriaForm').reset();
+        }
+
+        async function loadCategorias() {
+            const tbody = document.getElementById('categorias-tbody');
+            document.getElementById('loading-categ').style.display = 'block';
             tbody.innerHTML = '';
             
-            if (proveedores.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay proveedores registrados.</td></tr>';
+            try {
+                const response = await fetch(`${API_URL}/admin/categorias`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.status === 403 || response.status === 401) {
+                    alert('Sesión expirada o acceso denegado.');
+                    logout();
+                    return;
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    categoriasCache = data.categorias;
+                    renderCategorias(data.categorias);
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: red;">Error al cargar datos.</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: red;">Error de conexión con el servidor.</td></tr>';
+            } finally {
+                document.getElementById('loading-categ').style.display = 'none';
+            }
+        }
+
+        function renderCategorias(categorias) {
+            const tbody = document.getElementById('categorias-tbody');
+            tbody.innerHTML = '';
+            
+            if (categorias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay categorías registradas.</td></tr>';
                 return;
             }
 
-            proveedores.forEach(proveedor => {
+            categorias.forEach(categ => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${proveedor.id}</td>
-                    <td>${proveedor.nombre}</td>
-                    <td>${proveedor.telefono || 'N/A'}</td>
-                    <td>${proveedor.correo_contacto || 'N/A'}</td>
+                    <td>${categ.id}</td>
+                    <td>${categ.nombre}</td>
                     <td class="actions-cell">
-                        <button class="btn-edit" onclick="editProveedor(${proveedor.id})">Editar</button>
-                        <button class="btn-delete" onclick="deleteProveedor(${proveedor.id}, '${proveedor.nombre}')">Eliminar</button>
+                        <button class="btn-edit" onclick="openCategoriaModal(${categ.id})">Editar</button>
+                        <button class="btn-delete" onclick="deleteCategoria(${categ.id}, '${categ.nombre}')">Eliminar</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
+
+        async function saveCategoria(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('categ-id').value;
+            const nombre = document.getElementById('categ_nombre').value.trim();
+            const isEditing = !!id;
+            
+            if (!nombre) { alert('El nombre de la categoría no puede estar vacío.'); return; }
+
+            const method = isEditing ? 'PUT' : 'POST';
+            const url = isEditing 
+                ? `${API_URL}/admin/categorias/${id}` 
+                : `${API_URL}/admin/categorias`;
+
+            try {
+                const response = await fetch(url, { 
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nombre })
+                });
+                
+                const result = await response.json();
+                
+                // Manejo explícito del error 409 (Duplicidad)
+                if (response.status === 409) {
+                    alert('Error al guardar categoría: ' + (result.message || 'Ya existe una categoría con ese nombre.'));
+                    return; 
+                }
+
+                if (response.ok && result.success) {
+                    alert(`Categoría ${isEditing ? 'actualizada' : 'creada'} exitosamente.`);
+                    closeCategoriaModal();
+                    loadCategorias(); 
+                } else {
+                    alert('Error al guardar categoría: ' + (result.message || 'Error desconocido.'));
+                }
+            } catch (error) {
+                alert('Error de conexión con el servidor al guardar categoría.');
+            }
+        }
         
-        // --- LÓGICA DE PRODUCTO (implementación básica) ---
+        async function deleteCategoria(id, name) {
+            if (!confirm(`¿Está seguro de eliminar la categoría "${name}" (ID: ${id})?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/admin/categorias/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert(`Categoría "${name}" eliminada exitosamente.`);
+                    loadCategorias(); 
+                } else {
+                    alert('Error al eliminar categoría: ' + (result.message || 'Error desconocido.'));
+                }
+            } catch (error) {
+                alert('Error de conexión con el servidor.');
+            }
+        }
+
+        // ----------------------------------------------
+        // --- LÓGICA DE PRODUCTO (PENDIENTE) ---
+        // ----------------------------------------------
+        
         function openProductModal() { 
             document.getElementById('modal-title').textContent = 'Agregar Nuevo Producto';
             document.getElementById('product-id').value = ''; 
             document.getElementById('productForm').reset();
             document.getElementById('productModal').style.display = 'block';
         }
+
         function closeProductModal() {
             document.getElementById('productModal').style.display = 'none';
         }
-        async function loadInventory() { console.log('loadInventory() deshabilitado por el momento.'); }
-        function saveProduct(event) { event.preventDefault(); alert('Funcionalidad de guardar producto deshabilitada.'); closeProductModal(); }
-        function previewLogo(event) {
-            const logo = document.getElementById('company-logo');
-            const file = event.target.files[0];
-            if (file) {
-                logo.src = URL.createObjectURL(file);
-                alert('Logo listo en el frontend. La subida a servidor es una funcionalidad pendiente.');
-            }
+        
+        // Función placeholder para guardar producto
+        function saveProduct(event) { 
+            event.preventDefault(); 
+            alert('Funcionalidad de guardar producto pendiente de implementación.'); 
+            closeProductModal(); 
         }
 
+        // ----------------------------------------------
         // --- INICIALIZACIÓN ---
+        // ----------------------------------------------
         document.addEventListener('DOMContentLoaded', async () => {
             if (!token || !tenantId || rol !== 'administrador') {
                 alert('Sesión no válida o no tienes permisos. Redirigiendo a login.');
@@ -553,8 +715,11 @@
             showView('inventario-view'); 
         });
 
+        // ----------------------------------------------
         // --- LISTENERS ---
+        // ----------------------------------------------
         document.getElementById('proveedorForm').addEventListener('submit', saveProveedor);
+        document.getElementById('categoriaForm').addEventListener('submit', saveCategoria); 
         document.getElementById('productForm').addEventListener('submit', saveProduct); 
     </script>
 </body>

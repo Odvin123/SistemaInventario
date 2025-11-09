@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router(); 
 const db = require('../db'); 
-const { verifyToken } = require('../middleware/auth'); // Asegúrate de que esta ruta sea correcta
+const { verifyToken } = require('../middleware/auth'); 
 
-// 1. OBTENER TODOS LOS PRODUCTOS
 router.get('/', verifyToken, async (req, res) => {
     if (req.usuario.rol !== 'administrador') {
         return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
