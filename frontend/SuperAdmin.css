@@ -1,0 +1,228 @@
+/* RESET Y VARIABLES */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #1e293b;
+  --light-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --gray: #64748b;
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  background-color: var(--light-bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.dashboard-container {
+  padding: 24px;
+  min-height: 100vh;
+}
+
+.dashboard-container h1 {
+  font-size: 1.8rem;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.dashboard-container p {
+  color: var(--gray);
+  margin-bottom: 24px;
+}
+
+/* MENÚ DE ACCIONES */
+.dashboard-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+.dashboard-menu button,
+.dashboard-menu a {
+  padding: 10px 18px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-menu button:hover,
+.dashboard-menu a:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(235, 37, 86, 0.764);
+}
+
+.dashboard-menu a {
+  background-color: #ff0000;
+}
+
+.dashboard-menu a:hover {
+  background-color: #475569;
+}
+
+/* TABLA */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+th,
+td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* BOTONES DE ACCIÓN */
+button[onclick*="resetPassword"],
+button[onclick*="sendInvite"],
+button[onclick*="gestionarEmpresa"],
+button[onclick*="deleteEmpresa"] {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 2px;
+  transition: var(--transition);
+  font-weight: 600;
+}
+
+button[onclick*="resetPassword"] {
+  background-color: #000000;
+  color: white;
+}
+
+button[onclick*="resetPassword"]:hover {
+  background-color: #d97706;
+}
+
+button[onclick*="sendInvite"],
+button[onclick*="gestionarEmpresa"] {
+  background-color: var(--primary);
+  color: white;
+}
+
+button[onclick*="sendInvite"]:hover,
+button[onclick*="gestionarEmpresa"]:hover {
+  background-color: var(--primary-dark);
+}
+
+button.btn-delete {
+  background-color: var(--danger);
+  color: white;
+}
+
+button.btn-delete:hover {
+  background-color: #a11e1e;
+}
+
+button:disabled {
+  /* opacity: 0.5; */
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ESTADOS */
+td:has(.estado-activo),
+span.estado-activo {
+  color: var(--success);
+  font-weight: 600;
+}
+
+td:has(.estado-suspendido),
+span.estado-suspendido {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* LOADING */
+#loading-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--primary);
+  font-style: italic;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+
+  .dashboard-menu {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-menu button,
+  .dashboard-menu a {
+    text-align: center;
+    justify-content: center;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
+  }
+
+  button[onclick*="resetPassword"],
+  button[onclick*="sendInvite"],
+  button[onclick*="gestionarEmpresa"],
+  button[onclick*="deleteEmpresa"] {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    margin: 1px;
+  }
+}

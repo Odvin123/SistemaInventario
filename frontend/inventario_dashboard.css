@@ -1,0 +1,451 @@
+/* RESET Y VARIABLES */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #1e293b;
+  --light: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --gray: #64748b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  background-color: #f1f5f6;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+/* --- MENÚ SUPERIOR --- */
+.top-menu {
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.menu-item {
+  padding: 12px 18px;
+  text-decoration: none;
+  color: var(--gray);
+  font-weight: 600;
+  position: relative;
+  transition: var(--transition);
+  border-right: 1px solid var(--border);
+}
+
+.menu-item:hover,
+.menu-item.active {
+  color: var(--primary);
+  background-color: #f0f7ff;
+}
+
+.menu-item-nested {
+  display: block;
+  color: var(--text) !important;
+  padding: 12px 16px;
+  text-decoration: none;
+}
+
+.logout-link {
+  color: var(--danger) !important;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-left: 1px solid var(--border);
+}
+
+.logout-link:hover {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+/* --- DROPDOWNS --- */
+/* --- SUBMENÚ DESPLEGABLE PRINCIPAL (CATÁLOGOS) --- */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 180px; 
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1001;
+            border-radius: 4px;
+            top: 100%; 
+            left: 0;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .dropdown-content a:hover { background-color: #f1f1f1; }
+        .dropdown:hover > .dropdown-content { display: block; }
+
+        /* --- SUBMENÚ ANIDADO (PRODUCTOS) --- */
+        .dropdown-nested {
+            position: relative; 
+        }
+        .dropdown-nested .dropdown-content {
+            top: 0; 
+            left: 100%; 
+            border-left: 1px solid #ccc;
+        }
+        .dropdown-nested:hover > .dropdown-content { 
+            display: block; 
+        }
+
+/* --- VISTAS --- */
+.view-content {
+  display: none;
+}
+
+.view-content.active {
+  display: block;
+}
+
+/* --- HEADER DEL DASHBOARD --- */
+.dashboard-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 24px 40px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.dashboard-header h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.dashboard-header p {
+  opacity: 0.9;
+  margin-top: 6px;
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content {
+  display: flex;
+  gap: 24px;
+}
+
+.inventory-section {
+  flex: 3;
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.inventory-section h2 {
+  color: var(--primary);
+  margin-top: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stats-card,
+.quick-actions-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.stats-card h4,
+.quick-actions-card h4 {
+  margin-bottom: 14px;
+  color: var(--secondary);
+}
+
+.stats-card p {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stats-card small {
+  color: var(--gray);
+  font-size: 0.9rem;
+}
+
+/* BOTONES */
+.btn-add-product {
+  background-color: var(--success);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-add-product:hover {
+  background-color: #0da273;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-back {
+  background-color: #94a3b8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-right: 12px;
+}
+
+.btn-back:hover {
+  background-color: #64748b;
+}
+
+.btn-export,
+.btn-low-stock {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-export {
+  background-color: #0ea5e9;
+  color: white;
+}
+
+.btn-export:hover {
+  background-color: #0284c7;
+}
+
+.btn-low-stock {
+  background-color: var(--warning);
+  color: white;
+}
+
+.btn-low-stock:hover {
+  background-color: #d97706;
+}
+
+/* TABLAS */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  padding: 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+th {
+  background-color: #f0f7ff;
+  color: var(--primary-dark);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+tr:nth-child(even) {
+  background-color: #fafcff;
+}
+
+tr:hover td {
+  background-color: #f0f7ff;
+}
+
+.actions-cell button {
+  padding: 6px 12px;
+  margin-right: 6px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-edit {
+  background-color: var(--warning);
+  color: white;
+}
+
+.btn-delete {
+  background-color: var(--danger);
+  color: white;
+}
+
+/* MODALES */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background-color: var(--card-bg);
+  margin: 5% auto;
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transform: scale(0.95);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal:target .modal-content,
+.modal[style*="display: block"] .modal-content {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.close:hover {
+  color: var(--text);
+}
+
+.modal-content h3 {
+  margin-bottom: 20px;
+  color: var(--secondary);
+}
+
+.modal-content label {
+  display: block;
+  margin: 16px 0 8px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Lato', sans-serif;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus,
+.modal-content select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+  .main-content {
+    flex-direction: column;
+  }
+
+  .sidebar-section {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .stats-card,
+  .quick-actions-card {
+    flex: 1;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-menu {
+    flex-wrap: wrap;
+    padding: 10px;
+  }
+
+  .menu-left {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    margin: 10% auto;
+  }
+
+  .inventory-section h2,
+  .stats-card h4 {
+    font-size: 1.2rem;
+  }
+}
