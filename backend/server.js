@@ -13,6 +13,7 @@ const port = process.env.PORT || 4000;
 const proveedoresRouter = require('./routes/proveedores'); 
 const categoriasRouter = require('./routes/Categorias');
 const productosRouter = require('./routes/productos');
+const ventasRouter = require('./routes/ventas');
 
 // Configuración del servicio de correo
 const transporter = nodemailer.createTransport({
@@ -69,6 +70,7 @@ app.get('/', (req, res) => {
 app.use('/api/admin/proveedores', proveedoresRouter); 
 app.use('/api/admin/categorias', categoriasRouter);
 app.use('/api/admin/productos', productosRouter);
+app.use('/api/admin/ventas', ventasRouter);
 
 
 // Evitar Duplicados de Tenant ID

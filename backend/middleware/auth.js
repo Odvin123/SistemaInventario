@@ -21,4 +21,16 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-module.exports = { verifyToken };
+// FUNCIÓN AGREGADA/CORREGIDA: Define y verifica el rol
+const checkRole = (roles) => {
+    return (req, res, next) => {
+        // Verifica si el rol del usuario está incluido en los roles permitidos (roles array)
+        if (!req.usuario || !roles.includes(req.usuario.rol)) {
+            return res.status(403).json({ success: false, message: 'Acceso denegado. Rol no autorizado.' });
+        }
+        next();
+    };
+};
+
+// EXPORTACIÓN CORREGIDA: Exporta ambas funciones para ser usadas en ventas.js
+module.exports = { verifyToken, checkRole };

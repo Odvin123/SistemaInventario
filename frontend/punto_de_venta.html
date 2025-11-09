@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto de Venta - TU EMPRESA</title>
+    <style>
+        /* --- ESTILOS GENERALES Y FUENTE --- */
+        body { 
+            font-family: Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f0f0; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh;
+        }
+        .pos-window {
+            width: 1000px;
+            height: 650px;
+            background-color: white;
+            border: 1px solid #999;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            border-radius: 4px; 
+        }
+
+        /* --- ENCABEZADO (HEADER) --- */
+        .pos-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .pos-logo {
+            width: 70px; 
+            height: 70px;
+            background-color: #f1f1f1; 
+            border: 1px solid #ccc;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .pos-title-area {
+            flex-grow: 1;
+        }
+        .pos-title {
+            color: #007bff; 
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .pos-welcome {
+            font-size: 1rem;
+            color: #ffc107; 
+            font-weight: bold;
+            margin: 2px 0 0;
+            text-align: center;
+        }
+        .folio-box {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 5px 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+            border-radius: 3px;
+            margin-left: 20px;
+        }
+
+        /* --- MENÚ RÁPIDO (BOTONES F2, F3, etc) --- */
+        .quick-menu {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .menu-btn {
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            transition: background-color 0.1s;
+        }
+        .menu-btn:hover {
+            background-color: #d1d5db;
+        }
+
+        /* --- BARRA DE VENTA (SCANNER Y CHECKBOX) --- */
+        .sale-input-area {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .sale-input-area label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .barcode-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+        .search-icon {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 20px;
+        }
+        .factura-checkbox {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+        .factura-checkbox input {
+            margin-right: 5px;
+            transform: scale(1.2);
+        }
+
+        /* --- CUERPO PRINCIPAL (TABLA Y ACCIONES) --- */
+        .pos-main {
+            display: flex;
+            flex-grow: 1;
+            gap: 15px;
+            min-height: 0; 
+        }
+
+        /* --- TABLA DE DETALLE DE VENTA --- */
+        .pos-table-container {
+            flex-grow: 1;
+            overflow-y: hidden; 
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .pos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pos-table thead {
+            background-color: #007bff;
+            color: white;
+            display: block; 
+        }
+        .pos-table th {
+            padding: 10px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        /* Definición de anchos para la tabla de venta */
+        .pos-table thead th:nth-child(1) { width: 8%; } /* CANT */
+        .pos-table thead th:nth-child(2) { width: 15%; } /* CÓDIGO */
+        .pos-table thead th:nth-child(3) { width: 35%; } /* PRODUCTO */
+        .pos-table thead th:nth-child(4) { width: 22%; text-align: right; } /* PRECIO */
+        .pos-table thead th:nth-child(5) { width: 20%; text-align: right; padding-right: 10px; } /* IMPORTE */
+
+        .pos-table tbody {
+            display: block;
+            overflow-y: auto;
+            max-height: 350px; 
+            width: 100%;
+        }
+        /* Ajustar el ancho de las celdas de tbody para que coincida con thead */
+        .pos-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        .pos-table tbody td:nth-child(1) { width: 8%; } 
+        .pos-table tbody td:nth-child(2) { width: 15%; } 
+        .pos-table tbody td:nth-child(3) { width: 35%; } 
+        .pos-table tbody td:nth-child(4) { width: 22%; text-align: right; } 
+        .pos-table tbody td:nth-child(5) { width: 20%; text-align: right; padding-right: 10px; } 
+
+        /* --- PANEL LATERAL DE ACCIONES Y TOTALES --- */
+        .pos-actions-panel {
+            width: 300px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .action-btn {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            flex-grow: 1;
+            font-size: 0.95rem;
+        }
+        .btn-eliminar, .btn-borrar {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .btn-eliminar:hover, .btn-borrar:hover {
+            background-color: #f5c6cb;
+        }
+
+        .cobrar-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            margin-top: auto;
+        }
+        .cobrar-btn {
+            background-color: #ffc107; 
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: 3px solid #ff9800;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 150px;
+            text-align: center;
+        }
+        .total-display {
+            background-color: #fffae3; 
+            color: #000;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: 3px solid #ffeb3b;
+            border-radius: 8px;
+            width: 250px;
+            text-align: right;
+        }
+
+        /* --- FOOTER (INFO ADICIONAL) --- */
+        .pos-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .footer-data {
+            font-weight: bold;
+            color: #333;
+            margin-right: 15px;
+        }
+        .date-time-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .date-time-box span {
+            padding: 5px;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .date-time-box span:before {
+            content: "📅 ";
+            margin-right: 5px;
+        }
+        .date-time-box span:last-child:before {
+            content: "🕒 ";
+            margin-right: 5px;
+        }
+        
+        /* --- ESTILOS MODAL --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close { color: #aaa; float: right; font-size: 30px; font-weight: bold; }
+        .close:hover, .close:focus { color: #343a40; text-decoration: none; cursor: pointer; }
+        .modal-content label { display: block; margin-top: 10px; font-weight: bold;}
+        .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-add-product { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; }
+        .btn-edit { background-color: #ffc107; color: #343a40; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="pos-window">
+        
+        <div class="pos-header">
+            <div id="company-logo" class="pos-logo">
+                Área para Logo
+            </div>
+            <div class="pos-title-area">
+                <h2 id="company-name" class="pos-title">JC SOFTWARE SOLUCIONES EN SISTEMAS</h2>
+                <p class="pos-welcome">**BIENVENIDOS**</p>
+            </div>
+            <div class="folio-box">
+                Folio: <span id="folio-number">1</span>
+            </div>
+            <div style="margin-left: 10px; color: red; font-size: 1.5rem; cursor: pointer;" onclick="window.close()">
+                &#x2715; 
+            </div>
+        </div>
+
+        <div class="quick-menu">
+            <button class="menu-btn">Vendedores (F2)</button>
+            <button class="menu-btn">Clientes (F3)</button>
+            <button class="menu-btn">Corte caja (F6)</button>
+            <button class="menu-btn">Cancelar NV (F9)</button>
+        </div>
+
+        <div class="sale-input-area">
+            <label>VENTA DE PRODUCTOS / SERVICIOS</label>
+            <input type="text" class="barcode-input" placeholder="Escanear Código o Buscar Producto">
+            <button class="search-icon">🔍</button> 
+            
+            <div class="factura-checkbox">
+                <input type="checkbox" id="check-factura">
+                <label for="check-factura">Factura</label>
+            </div>
+        </div>
+
+        <div class="pos-main">
+            <div class="pos-table-container">
+                <table class="pos-table">
+                    <thead>
+                        <tr>
+                            <th>CANT.</th>
+                            <th>CÓDIGO</th>
+                            <th>PRODUCTO</th>
+                            <th style="text-align: right;">PRECIO UNI.</th>
+                            <th style="text-align: right;">IMPORTE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" style="text-align: center; color: #aaa;">Presione 🔍 para añadir productos.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pos-actions-panel">
+                <div class="action-btns">
+                    <button class="action-btn btn-eliminar" onclick="removeItemFromSale()">Eliminar (Supr)</button>
+                    <button class="action-btn btn-borrar" onclick="clearSale()">Borrar (F7)</button>
+                </div>
+                
+                <div class="cobrar-area">
+                    <div class="cobrar-btn" onclick="handleCobrar()">
+                        Cobrar (F8)
+                    </div>
+                    <div id="total-amount" class="total-display">
+                        C$0.00 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pos-footer">
+            <div class="footer-info">
+                <span>Le atiende: <span class="footer-data">ADMINISTRADOR</span></span>
+                <span>Cliente: <span class="footer-data">PUBLICO EN GENERAL</span></span>
+                <span>Vendedor: <span class="footer-data">MOSTRADOR</span></span>
+            </div>
+            <div class="date-time-box">
+                <span id="current-date">--</span>
+                <span id="current-time">--</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="movimientoVentasModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close" onclick="closeMovimientoVentasModal()">&times;</span>
+            <h3 id="movimiento-title">Agregar Producto a Venta</h3>
+            <form id="movimientoVentasForm">
+                
+                <label for="clasificacion">Clasificación:</label>
+                <select id="clasificacion" required onchange="filterProductsByClasificacion()">
+                    <option value="TODOS">TODOS</option> 
+                </select>
+                
+                <label for="producto_nombre">Producto:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="producto_nombre" placeholder="Nombre o Descripción del Producto" disabled>
+                    <button type="button" class="btn-edit" onclick="openBusquedaProductoModal()" style="padding: 10px;">🔍</button>
+                </div>
+                
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label for="cantidad_venta">Cantidad a Vender:</label>
+                        <input type="number" id="cantidad_venta" required min="1" step="1" value="1" oninput="validateStock()">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="existencia_stock">Existencia (Stock):</label>
+                        <input type="text" id="existencia_stock" disabled style="background-color: #f1f1f1;" value="--">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="precio_unitario">Precio (C$):</label>
+                        <input type="text" id="precio_unitario" disabled style="background-color: #f1f1f1;" value="C$0.00">
+                    </div>
+                </div>
+                
+                <input type="hidden" id="selected_product_id">
+                <input type="hidden" id="selected_product_clave">
+
+                <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Añadir a la Venta</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="busquedaProductoModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close" onclick="closeBusquedaProductoModal()">&times;</span>
+            <h3>Busqueda de Producto</h3>
+            <input type="text" id="filtro_descripcion" placeholder="Filtrar por nombre o descripción" oninput="filterBusquedaProductos()" style="width: 100%; margin-bottom: 15px;">
+            
+            <div id="busqueda-table-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
+                <table id="busqueda-table" class="pos-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Clave</th>
+                            <th>Descripción</th>
+                            <th>Stock</th>
+                            <th>Precio (C$)</th>
+                            <th>Proveedor</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="busqueda-tbody">
+                        <tr><td colspan="6" style="text-align: center;">Cargando inventario...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="cajaModal" class="modal">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <span class="close" onclick="closeCajaModal()">&times;</span>
+            <h3 style="color: #007bff; margin-bottom: 20px;">Caja de Cobro</h3>
+
+            <h1 style="color: #333;">Total a Pagar:</h1>
+            <h2 id="caja-total-a-pagar" style="color: #d9534f; font-size: 2.5rem; margin-top: 5px;">C$0.00</h2>
+            <p id="total-letras" style="font-size: 0.8rem; color: #666;">--</p>
+            
+            <form id="cajaForm" style="margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="pago-efectivo">Efectivo (C$)</label>
+                        <input type="number" id="pago-efectivo" value="0.00" step="0.01" min="0" oninput="calcularCambio()">
+                    </div>
+                    <div>
+                        <label for="pago-tarjeta">Tarjeta (C$)</label>
+                        <input type="number" id="pago-tarjeta" value="0.00" step="0.01" min="0" oninput="calcularCambio()">
+                    </div>
+                    <div>
+                        <label for="pago-transferencia">Transferencia (C$)</label>
+                        <input type="number" id="pago-transferencia" value="0.00" step="0.01" min="0" oninput="calcularCambio()">
+                    </div>
+                    <div>
+                        <label for="pago-credito">Crédito (C$)</label>
+                        <input type="number" id="pago-credito" value="0.00" step="0.01" min="0" oninput="calcularCambio()">
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 25px;">Cambio:</h3>
+                <h2 id="caja-monto-cambio" style="color: #28a745; font-size: 2rem;">C$0.00</h2>
+
+                <div style="display: flex; justify-content: space-around; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn-edit" onclick="closeCajaModal()" style="background-color: #dc3545; color: white;">Cancelar</button>
+                    <button type="button" class="btn-add-product" onclick="finalizarVentaDesdeCaja()" style="background-color: #28a745; color: white;">Aceptar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    const API_URL = 'http://localhost:4000/api'; 
+    let token = localStorage.getItem('token'); 
+    let tenantId = localStorage.getItem('tenant_id');
+    
+    let ventaActual = []; 
+    let productosInventarioCache = []; 
+    let categoriasCache = [];
+    let proveedoresCache = [];
+
+    
+
+    function openMovimientoVentasModal() {
+        if (!token) {
+              alert('Sesión no válida. Por favor, inicie sesión.');
+              window.location.href = 'login.html'; 
+              return;
+        }
+        document.getElementById('movimientoVentasModal').style.display = 'block';
+        loadCategoriasAndInitBusqueda();
+    }
+
+    function closeMovimientoVentasModal() {
+        document.getElementById('movimientoVentasModal').style.display = 'none';
+        document.getElementById('movimientoVentasForm').reset();
+        clearMovimientoInputs(); 
+    }
+
+    function openBusquedaProductoModal() {
+        document.getElementById('busquedaProductoModal').style.display = 'block';
+        filterProductsByClasificacion(true); 
+        document.getElementById('filtro_descripcion').value = '';
+        document.getElementById('filtro_descripcion').focus();
+    }
+
+    function closeBusquedaProductoModal() {
+        document.getElementById('busquedaProductoModal').style.display = 'none';
+    }
+    
+    function openCajaModal(total) {
+        document.getElementById('cajaModal').style.display = 'block';
+        document.getElementById('pago-efectivo').value = total.toFixed(2);
+        document.getElementById('pago-tarjeta').value = '0.00';
+        document.getElementById('pago-transferencia').value = '0.00';
+        document.getElementById('pago-credito').value = '0.00';
+        
+        document.getElementById('caja-total-a-pagar').textContent = `C$${total.toFixed(2)}`;
+        document.getElementById('total-letras').textContent = '(Monto en letras no implementado)'; // Mensaje temporal
+        
+        calcularCambio();
+    }
+
+    function closeCajaModal() {
+        document.getElementById('cajaModal').style.display = 'none';
+        document.getElementById('cajaForm').reset();
+    }
+
+
+    function calcularCambio() {
+        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+        const totalVenta = parseFloat(totalVentaStr);
+        
+        const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
+        const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
+        const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
+        const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+
+        const totalPagado = efectivo + tarjeta + transferencia + credito;
+        const cambio = totalPagado - totalVenta;
+        
+        const cambioDisplay = document.getElementById('caja-monto-cambio');
+        cambioDisplay.textContent = `C$${cambio.toFixed(2)}`;
+        cambioDisplay.style.color = cambio >= 0 ? '#28a745' : '#dc3545';
+    }
+    
+    function handleCobrar() {
+        if (ventaActual.length === 0) {
+            alert("No hay productos en la venta para cobrar.");
+            return;
+        }
+        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+        const totalVenta = parseFloat(totalVentaStr);
+        
+        openCajaModal(totalVenta);
+    }
+
+    async function finalizarVentaDesdeCaja() {
+        
+        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+        const totalVenta = parseFloat(totalVentaStr);
+
+        const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
+        const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
+        const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
+        const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+        
+        const totalPagado = efectivo + tarjeta + transferencia + credito;
+
+        if (totalPagado < totalVenta) {
+            alert(`¡ERROR! Falta pagar C$${(totalVenta - totalPagado).toFixed(2)}. Complete el pago.`);
+            return;
+        }
+        
+        const pagos = [];
+        if (efectivo > 0) pagos.push({ metodo: 'Efectivo', monto: efectivo });
+        if (tarjeta > 0) pagos.push({ metodo: 'Tarjeta', monto: tarjeta });
+        if (transferencia > 0) pagos.push({ metodo: 'Transferencia', monto: transferencia });
+        if (credito > 0) pagos.push({ metodo: 'Credito', monto: credito });
+
+        if (pagos.length === 0) {
+            alert("Debe ingresar al menos un pago para finalizar la venta.");
+            return;
+        }
+        
+        const btnAceptar = document.querySelector('#cajaModal .btn-add-product');
+        btnAceptar.disabled = true;
+
+        try {
+            const ventaData = {
+                cliente_id: 1, 
+                vendedor_id: 1, 
+                es_factura: document.getElementById('check-factura').checked,
+                detalles: ventaActual.map(item => ({
+                    producto_id: item.id,
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio
+                })),
+                pagos: pagos 
+            };
+
+            const response = await fetch(`${API_URL}/admin/ventas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(ventaData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert(`¡ÉXITO! Venta #${result.folio} registrada. Cambio a devolver: C$${result.cambio}`);
+                
+                ventaActual = [];
+                renderVentaActual();
+                closeCajaModal();
+                loadInventarioPDV(); 
+                
+            } else {
+                alert('Error al registrar la venta: ' + (result.message || 'Error desconocido del servidor.'));
+            }
+        } catch (error) {
+            alert('Error de conexión o de red al procesar la venta.');
+            console.error('Error en fetch (finalizarVentaDesdeCaja):', error);
+        } finally {
+            btnAceptar.disabled = false; 
+        }
+    }
+
+
+
+    async function loadCategoriasAndInitBusqueda() {
+        await Promise.all([loadCategoriasPDV(), loadInventarioPDV(), loadProveedoresPDV()]);
+        renderClasificaciones();
+    }
+
+    async function fetchData(endpoint) {
+          try {
+            const response = await fetch(`${API_URL}/admin/${endpoint}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                 const error = await response.json();
+                 console.error(`Error al cargar ${endpoint}:`, error);
+                 return [];
+            }
+            const data = await response.json();
+            return data[`${endpoint}`]; 
+        } catch (error) { 
+            console.error(`Error de conexión al cargar ${endpoint}:`, error); 
+            return [];
+        }
+    }
+
+    async function loadCategoriasPDV() {
+        categoriasCache = await fetchData('categorias');
+    }
+
+    async function loadInventarioPDV() {
+        productosInventarioCache = await fetchData('productos');
+        if (document.getElementById('busquedaProductoModal').style.display === 'block') {
+             renderBusquedaProductos(productosInventarioCache);
+        }
+    }
+
+    async function loadProveedoresPDV() {
+        proveedoresCache = await fetchData('proveedores');
+    }
+
+
+    function renderClasificaciones() {
+        const select = document.getElementById('clasificacion');
+        select.innerHTML = '<option value="TODOS">TODOS</option>';
+        categoriasCache.forEach(c => {
+            select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+        });
+    }
+
+    function filterProductsByClasificacion(isInitialLoad = false) {
+        const clasificacionId = document.getElementById('clasificacion').value;
+        if (!isInitialLoad) clearMovimientoInputs(); 
+        
+        let productosFiltrados = productosInventarioCache;
+        if (clasificacionId !== 'TODOS') {
+            productosFiltrados = productosInventarioCache.filter(p => p.categoria_id == clasificacionId);
+        }
+        
+        if (document.getElementById('busquedaProductoModal').style.display === 'block') {
+            renderBusquedaProductos(productosFiltrados);
+        }
+    }
+
+    function filterBusquedaProductos() {
+        const filtro = document.getElementById('filtro_descripcion').value.toLowerCase();
+        const clasificacionId = document.getElementById('clasificacion').value;
+        
+        let productosBase = productosInventarioCache;
+        
+        if (clasificacionId !== 'TODOS') {
+            productosBase = productosBase.filter(p => p.categoria_id == clasificacionId);
+        }
+        
+        const productosFiltrados = productosBase.filter(p => 
+            p.descripcion.toLowerCase().includes(filtro) || 
+            p.id.toString().includes(filtro) 
+        );
+        
+        renderBusquedaProductos(productosFiltrados);
+    }
+
+    function renderBusquedaProductos(productos) {
+        const tbody = document.getElementById('busqueda-tbody');
+        tbody.innerHTML = '';
+        
+        if (productos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No se encontraron productos.</td></tr>';
+            return;
+        }
+
+        productos.forEach(p => {
+            const proveedor = proveedoresCache.find(prov => prov.id === p.proveedor_id);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${p.id}</td>
+                <td>${p.descripcion}</td>
+                <td>${p.stock}</td>
+                <td style="text-align: right;">C$${parseFloat(p.precio).toFixed(2)}</td>
+                <td>${proveedor ? proveedor.nombre : 'N/A'}</td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn-add-product" 
+                            onclick="selectProductForSale(${p.id})">Seleccionar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+
+    function selectProductForSale(productId) {
+        const producto = productosInventarioCache.find(p => p.id === productId);
+        if (!producto) return;
+        
+        document.getElementById('selected_product_id').value = producto.id;
+        document.getElementById('selected_product_clave').value = producto.id; 
+        document.getElementById('producto_nombre').value = producto.descripcion;
+        document.getElementById('existencia_stock').value = producto.stock;
+        document.getElementById('precio_unitario').value = `C$${parseFloat(producto.precio).toFixed(2)}`;
+        document.getElementById('cantidad_venta').value = 1;
+        
+        closeBusquedaProductoModal();
+        validateStock(); 
+    }
+
+    function validateStock() {
+        const stock = parseInt(document.getElementById('existencia_stock').value);
+        const cantidadInput = document.getElementById('cantidad_venta');
+        let cantidad = parseInt(cantidadInput.value);
+
+        if (isNaN(cantidad) || cantidad <= 0) {
+            cantidadInput.value = 1;
+            cantidad = 1;
+        }
+
+        if (stock !== '--' && stock < cantidad) {
+            alert(`Stock Insuficiente. Solo hay ${stock} unidades disponibles.`);
+            cantidadInput.value = stock > 0 ? stock : 1; 
+            if (stock <= 0) {
+                alert("Este producto no tiene stock disponible.");
+                cantidadInput.value = 1;
+            }
+        }
+    }
+
+    document.getElementById('movimientoVentasForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const productId = parseInt(document.getElementById('selected_product_id').value);
+        const cantidad = parseInt(document.getElementById('cantidad_venta').value);
+        const stock = parseInt(document.getElementById('existencia_stock').value);
+        const precioStr = document.getElementById('precio_unitario').value.replace('C$', '');
+        const precio = parseFloat(precioStr);
+        
+        if (!productId) {
+            alert("Debe seleccionar un producto primero.");
+            return;
+        }
+        
+        if (cantidad <= 0 || isNaN(cantidad)) {
+            alert("La cantidad debe ser un número positivo.");
+            return;
+        }
+        
+        const productoData = productosInventarioCache.find(p => p.id === productId);
+        if (!productoData) return;
+
+        const existingItem = ventaActual.find(item => item.id === productId);
+        const currentlyInSale = existingItem ? existingItem.cantidad : 0;
+        
+        if ((currentlyInSale + cantidad) > stock) {
+            alert(`Stock Insuficiente. Al añadir ${cantidad}, se superaría el stock disponible de ${stock}.`);
+            return;
+        }
+
+
+        addProductToSale(productoData, cantidad, precio);
+        closeMovimientoVentasModal();
+    });
+
+
+    function addProductToSale(producto, cantidad, precio) {
+        const importe = cantidad * precio;
+        
+        const existingItem = ventaActual.find(item => item.id === producto.id);
+        
+        if (existingItem) {
+            existingItem.cantidad += cantidad;
+            existingItem.importe = existingItem.cantidad * existingItem.precio;
+        } else {
+            ventaActual.push({
+                id: producto.id,
+                clave: producto.id,
+                descripcion: producto.descripcion,
+                cantidad: cantidad,
+                precio: precio,
+                importe: importe
+            });
+        }
+        
+        renderVentaActual();
+    }
+
+    function removeItemFromSale() {
+        if (ventaActual.length > 0) {
+            ventaActual.pop();
+            renderVentaActual();
+        } else {
+            alert("No hay elementos para eliminar.");
+        }
+    }
+
+    function clearSale() {
+        if (confirm("¿Está seguro de borrar toda la venta actual?")) {
+            ventaActual = [];
+            renderVentaActual();
+        }
+    }
+
+    function renderVentaActual() {
+        const tbody = document.querySelector('.pos-table tbody');
+        tbody.innerHTML = '';
+        let totalVenta = 0;
+
+        if (ventaActual.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #aaa;">Presione 🔍 para añadir productos.</td></tr>';
+            document.getElementById('total-amount').textContent = 'C$0.00';
+            return;
+        }
+
+        ventaActual.forEach(item => {
+            totalVenta += item.importe;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.cantidad}</td>
+                <td>${item.clave}</td>
+                <td>${item.descripcion}</td>
+                <td style="text-align: right;">C$${item.precio.toFixed(2)}</td>
+                <td style="text-align: right;">C$${item.importe.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('total-amount').textContent = `C$${totalVenta.toFixed(2)}`;
+    }
+    
+    function clearMovimientoInputs() {
+        document.getElementById('selected_product_id').value = '';
+        document.getElementById('selected_product_clave').value = '';
+        document.getElementById('producto_nombre').value = '';
+        document.getElementById('existencia_stock').value = '--';
+        document.getElementById('precio_unitario').value = 'C$0.00';
+        document.getElementById('cantidad_venta').value = '1';
+    }
+
+
+    // Lógica de Fecha y Hora 
+    function updateDateTime() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-NI', {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        const timeStr = now.toLocaleTimeString('es-NI', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+
+        document.getElementById('current-date').textContent = dateStr;
+        document.getElementById('current-time').textContent = timeStr;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        
+        const nombreEmpresa = tenantId ? tenantId.toUpperCase() : "TU EMPRESA COMERCIAL";
+        document.getElementById('company-name').textContent = nombreEmpresa;  
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        renderVentaActual();
+        
+        document.querySelector('.search-icon').addEventListener('click', openMovimientoVentasModal);
+        
+        document.querySelector('.cobrar-btn').removeEventListener('click', finalizarVentaDesdeCaja); 
+        document.querySelector('.cobrar-btn').addEventListener('click', handleCobrar);
+
+        await loadCategoriasAndInitBusqueda();
+    });
+</script>
+</body>
+</html>
