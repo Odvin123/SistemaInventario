@@ -364,7 +364,7 @@
 
         let proveedoresCache = []; 
         let categoriasCache = []; 
-        let productosCache = []; // Nuevo caché para productos
+        let productosCache = []; 
 
         function showView(viewId) {
             const views = document.querySelectorAll('.view-content');
@@ -372,13 +372,13 @@
 
             document.getElementById(viewId).classList.add('active');
             
-            // Carga dinámica de datos al cambiar de vista
+
             if (viewId === 'proveedores-view') {
-                loadProveedores(true); // Cargar y renderizar
+                loadProveedores(true);
             } else if (viewId === 'categorias-view') { 
-                loadCategorias(true); // Cargar y renderizar
+                loadCategorias(true); 
             } else if (viewId === 'inventario-view') {
-                loadProductos(); // Cargar productos al volver a la vista principal
+                loadProductos();
             }
         }
 
@@ -389,9 +389,8 @@
             }
         }
         
-        // ----------------------------------------------
-        // --- LÓGICA DE PROVEEDORES (CRUD COMPLETO) ---
-        // ----------------------------------------------
+        //Logica de Proveedor
+        
         
         function openProveedorModal(id = null) {
             const modal = document.getElementById('proveedorModal');
@@ -647,8 +646,8 @@
                 });
                 
                 const result = await response.json();
+
                 
-                // Manejo explícito del error 409 (Duplicidad)
                 if (response.status === 409) {
                     alert('Error al guardar categoría: ' + (result.message || 'Ya existe una categoría con ese nombre.'));
                     return; 
@@ -690,22 +689,19 @@
             }
         }
 
-        // ----------------------------------------------
-        // --- LÓGICA DE PRODUCTO (CRUD IMPLEMENTADO) ---
-        // ----------------------------------------------
-        
-        // Carga Proveedores y Categorías en los selectores del modal de producto
+      //Logica del Producto
+    
         async function loadFKsForProductForm() {
             const selectProveedor = document.getElementById('proveedor_id');
             const selectCategoria = document.getElementById('categoria_id');
             selectProveedor.innerHTML = '<option value="">-- Cargando Proveedores... --</option>';
             selectCategoria.innerHTML = '<option value="">-- Cargando Categorías... --</option>';
 
-            // Cargar sin renderizar tablas (doRender = false)
+
             if (proveedoresCache.length === 0) await loadProveedores(false); 
             if (categoriasCache.length === 0) await loadCategorias(false); 
 
-            // Llenar selectores
+
             selectProveedor.innerHTML = '<option value="">-- Seleccionar Proveedor --</option>';
             proveedoresCache.forEach(p => {
                 selectProveedor.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
@@ -732,7 +728,7 @@
                 
                 title.textContent = `Editar Producto (Clave: ${id})`;
                 document.getElementById('product-id').value = id;
-                claveInput.value = id; // Clave fija
+                claveInput.value = id; 
                 document.getElementById('proveedor_id').value = producto.proveedor_id;
                 document.getElementById('categoria_id').value = producto.categoria_id;
                 document.getElementById('descripcion').value = producto.descripcion;
@@ -797,7 +793,7 @@
         
         async function loadProductos() {
             const tbody = document.getElementById('inventory-tbody');
-            // Colspan es 5 ahora
+
             tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Cargando inventario...</td></tr>'; 
             
             try {
@@ -812,11 +808,11 @@
                     renderProductos(data.productos);
                     document.getElementById('total-productos').textContent = data.productos.length;
                 } else {
-                    // Colspan es 5 ahora
+
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error al cargar datos.</td></tr>'; 
                 }
             } catch (error) {
-                // Colspan es 5 ahora
+
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error de conexión con el servidor.</td></tr>'; 
             }
         }
@@ -826,7 +822,7 @@
             tbody.innerHTML = '';
             
             if (productos.length === 0) {
-                // Colspan es 5 ahora
+                
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay productos registrados.</td></tr>'; 
                 return;
             }
@@ -864,7 +860,7 @@
                     alert(`Producto "${name}" eliminado exitosamente.`);
                     loadProductos(); 
                 } else {
-                    // Manejo del error 23503 (violación de clave foránea) si intentan eliminar un producto en uso
+
                     if (response.status === 400 && result.message.includes('Foreign key violation')) {
                         alert(`No se puede eliminar el producto "${name}" porque está asociado a transacciones, ventas o documentos.`);
                     } else {
@@ -877,9 +873,7 @@
         }
 
 
-        // ----------------------------------------------
-        // --- INICIALIZACIÓN ---
-        // ----------------------------------------------
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!token || !tenantId || rol !== 'administrador') {
                 alert('Sesión no válida o no tienes permisos. Redirigiendo a login.');

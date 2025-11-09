@@ -1,6 +1,4 @@
-// backend/routes/ventas.js
-
-const express = require('express');
+ const express = require('express');
 const router = express.Router();
 const db = require('../db'); 
 const { verifyToken, checkRole } = require('../middleware/auth'); 
