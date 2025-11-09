@@ -17,7 +17,10 @@
             display: flex;
             gap: 0;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            justify-content: space-between; 
+            align-items: center;
         }
+        .menu-left { display: flex; gap: 0; }
         .menu-item {
             padding: 8px 15px;
             text-decoration: none;
@@ -31,13 +34,27 @@
             background-color: #e2e6ea;
             color: #000;
         }
-        /* --- SUBMENÚ DESPLEGABLE --- */
+
+        /* ESTILO PARA CERRAR SESIÓN */
+        .logout-link {
+            padding: 8px 20px;
+            color: #dc3545 !important;
+            font-weight: bold;
+            border-left: 1px solid #e9ecef;
+            border-right: none;
+        }
+        .logout-link:hover {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+        }
+
+        /* --- SUBMENÚ DESPLEGABLE PRINCIPAL (CATÁLOGOS) --- */
         .dropdown { position: relative; display: inline-block; }
         .dropdown-content {
             display: none;
             position: absolute;
             background-color: white;
-            min-width: 160px;
+            min-width: 180px; 
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1001;
             border-radius: 4px;
@@ -53,13 +70,24 @@
             font-size: 0.9rem;
         }
         .dropdown-content a:hover { background-color: #f1f1f1; }
-        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown:hover > .dropdown-content { display: block; } /* Modificado para submenús */
 
-        /* --- CONTENEDOR DE VISTAS --- */
+        /* --- SUBMENÚ ANIDADO (PRODUCTOS) --- */
+        .dropdown-nested {
+            position: relative; /* Contenedor del sub-submenú */
+        }
+        .dropdown-nested .dropdown-content {
+            top: 0; /* Alineado al tope */
+            left: 100%; /* Desplazado a la derecha */
+            border-left: 1px solid #ccc;
+        }
+        .dropdown-nested:hover > .dropdown-content { 
+            display: block; 
+        }
+
+        /* OTRAS SECCIONES (sin cambios) */
         .view-content { display: none; } 
         .view-content.active { display: block; } 
-        
-        /* --- HEADER Y BIENVENIDA --- */
         .dashboard-header { 
             background: linear-gradient(to right, #007bff, #0056b3); 
             color: white; 
@@ -67,20 +95,14 @@
             border-radius: 10px; 
             margin-bottom: 30px;
             display: flex;
-            justify-content: flex-start; /* Alineación cambiada */
+            justify-content: flex-start;
             align-items: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .header-left h1 { margin: 0; font-size: 2.2rem; }
         .header-left p { margin: 5px 0 0; font-size: 1.1rem; opacity: 0.9; }
-
-        /* --- LOGO Y OPCIÓN DE SUBIDA (Ocultos) --- */
         .logo-upload-container { display: none; } 
-        
-        /* --- CONTENEDOR PRINCIPAL DE BLOQUES --- */
         .main-content { display: flex; gap: 20px; }
-        
-        /* --- SECTIONES (Inventario, Proveedores) --- */
         .inventory-section {
             flex: 3; 
             background-color: white;
@@ -90,8 +112,6 @@
             width: 100%; 
         }
         .inventory-section h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-
-        /* --- SIDEBAR DERECHO (Estadísticas/Acciones Rápidas) --- */
         .sidebar-section {
             flex: 1; 
             display: flex;
@@ -107,20 +127,14 @@
         }
         .stats-card p { font-size: 1.5rem; font-weight: bold; color: #6c757d; margin: 5px 0; }
         .stats-card small { color: #6c757d; }
-
-        /* --- BOTONES Y TABLA --- */
-        .btn-logout { display: none; }
         .btn-add-product { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; font-weight: bold; transition: background-color 0.3s; }
         .btn-add-product:hover { background-color: #218838; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 0.9rem; }
         th { background-color: #007bff; color: white; }
         .actions-cell button { margin-right: 5px; padding: 6px 10px; cursor: pointer; border-radius: 4px; border: none; font-size: 0.85rem; }
         .btn-edit { background-color: #ffc107; color: #343a40; }
         .btn-delete { background-color: #dc3545; color: white; }
-        
-        /* --- MODALES --- */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .close { color: #aaa; float: right; font-size: 30px; font-weight: bold; }
@@ -132,42 +146,51 @@
 <body>
     
     <nav class="top-menu">
-        <a href="#" class="menu-item">Archivo</a>
-        
-        <div class="dropdown">
-            <a href="#" class="menu-item active">Catálogos</a>
-            <div class="dropdown-content">
-                <a href="#" onclick="showView('inventario-view')">Productos</a>
-                <a href="#" onclick="showView('proveedores-view')">Proveedores</a>
-                <a href="#" onclick="showView('clientes-view')">Clientes</a>
-                <a href="#" onclick="showView('vendedores-view')">Vendedores</a>
-                <a href="#" onclick="showView('rubros-view')">Rubros</a>
-                <a href="#" onclick="showView('usuarios-view')">Usuarios</a>
+        <div class="menu-left">
+            <a href="#" class="menu-item">Archivo</a>
+            
+            <div class="dropdown">
+                <a href="#" class="menu-item active">Catálogos</a>
+                <div class="dropdown-content">
+                    
+                    <div class="dropdown-nested">
+                        <a href="#" class="menu-item-nested">Productos &gt;</a> 
+                        <div class="dropdown-content">
+                            <a href="#" onclick="showView('clasificaciones-view')">Clasificaciones</a>
+                            <a href="#" onclick="showView('registrar-producto-view')">Registrar Producto</a>
+                        </div>
+                    </div>
+                    <a href="#" onclick="showView('proveedores-view')">Proveedores</a>
+                    <a href="#" onclick="showView('clientes-view')">Clientes</a>
+                    <a href="#" onclick="showView('vendedores-view')">Vendedores</a>
+                    <a href="#" onclick="showView('rubros-view')">Rubros</a>
+                    <a href="#" onclick="showView('usuarios-view')">Usuarios</a>
+                </div>
             </div>
-        </div>
 
-        <a href="#" class="menu-item">Movimientos</a>
-        <a href="#" class="menu-item">Reportes</a>
-        <a href="#" class="menu-item">Configuración</a>
-        <a href="#" class="menu-item">Mantenimiento</a>
-        <a href="#" class="menu-item">Acerca</a>
+            <a href="#" class="menu-item">Movimientos</a>
+            <a href="#" class="menu-item">Reportes</a>
+            <a href="#" class="menu-item">Configuración</a>
+            <a href="#" class="menu-item">Mantenimiento</a>
+            <a href="#" class="menu-item">Acerca</a>
+        </div>
+        
+        <a href="#" class="menu-item logout-link" onclick="logout()">Cerrar Sesión 🔒</a>
     </nav>
 
     <div id="main-view-container">
 
         <div id="inventario-view" class="view-content active">
-            
             <div class="dashboard-header">
                 <div class="header-left">
                     <h1 id="welcome-message">Bienvenido, Administrador.</h1>
                     <p>Gestión de Inventario de <span id="company-name-display">Tu Empresa</span></p>
                 </div>
-                
-                </div>
+            </div>
             
             <div class="container main-content">
-                
                 <div class="inventory-section">
+                    <button class="btn-add-product" onclick="openProductModal()">➕ Agregar Nuevo Producto</button>
                     <h2>Inventario Actual</h2>
                     <table id="inventory-table">
                         <thead>
@@ -181,7 +204,7 @@
                             </tr>
                         </thead>
                         <tbody id="inventory-tbody">
-                            <tr><td colspan="6" style="text-align: center; color: #6c757d;">Funcionalidad de inventario pendiente de conexión a la base de datos.</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: #6c757d;">Presione "Agregar Nuevo Producto" para comenzar.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -201,16 +224,51 @@
             </div>
         </div> 
 
+        <div id="clasificaciones-view" class="view-content">
+            <div class="container">
+                <div class="inventory-section">
+                    <button class="btn-add-product" style="background-color: #6c757d; margin-right: 10px;" onclick="showView('inventario-view')">⬅️ Volver al Inventario</button>
+                    <h2>Clasificaciones de Productos</h2>
+                    <p style="color: #007bff; font-weight: bold;">Aquí se gestionarán los Rubros, Categorías y Subcategorías.</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Clasificación</th>
+                                <th>Productos Relacionados</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Electrónica</td>
+                                <td>54</td>
+                                <td><button class="btn-edit">Editar</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Hogar</td>
+                                <td>121</td>
+                                <td><button class="btn-edit">Editar</button></td>
+                            </tr>
+                            <tr><td colspan="4" style="text-align: center;">Funcionalidad pendiente.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="registrar-producto-view" class="view-content"><h1 class="container">Usar el Modal de Producto para Registrar...</h1></div>
+        
         <div id="proveedores-view" class="view-content">
             <div class="container">
                 <div class="inventory-section">
-                    
                     <button class="btn-add-product" 
-                            style="background-color: #6c757d; margin-right: 10px;" 
-                            onclick="showView('inventario-view')">
+                        style="background-color: #6c757d; margin-right: 10px;" 
+                        onclick="showView('inventario-view')">
                         ⬅️ Volver al Inicio
                     </button>
-
                     <button class="btn-add-product" onclick="openProveedorModal()">➕ Agregar Nuevo Proveedor</button>
                     
                     <h2>Gestión de Proveedores</h2>
@@ -232,34 +290,29 @@
                 </div>
             </div>
         </div>
-
         <div id="clientes-view" class="view-content"><h1 class="container">Clientes Pendiente...</h1></div>
         <div id="vendedores-view" class="view-content"><h1 class="container">Vendedores Pendiente...</h1></div>
         <div id="rubros-view" class="view-content"><h1 class="container">Rubros Pendiente...</h1></div>
         <div id="usuarios-view" class="view-content"><h1 class="container">Usuarios Pendiente...</h1></div>
 
-    </div> <div id="productModal" class="modal">
+    </div> 
+
+    <div id="productModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeProductModal()">&times;</span>
             <h3 id="modal-title">Agregar Nuevo Producto</h3>
             <form id="productForm">
                 <input type="hidden" id="product-id">
-                
                 <label for="sku">SKU / Código:</label>
                 <input type="text" id="sku" required>
-
                 <label for="nombre_producto">Nombre del Producto:</label>
                 <input type="text" id="nombre_producto" required>
-                
                 <label for="descripcion">Descripción (opcional):</label> 
                 <textarea id="descripcion"></textarea>
-                
                 <label for="cantidad">Cantidad:</label>
                 <input type="number" id="cantidad" required min="0">
-
                 <label for="precio">Precio:</label>
                 <input type="number" id="precio" step="0.01" required min="0">
-
                 <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Producto</button>
             </form>
         </div>
@@ -271,16 +324,12 @@
             <h3 id="proveedor-modal-title">Agregar Nuevo Proveedor</h3>
             <form id="proveedorForm">
                 <input type="hidden" id="proveedor-id"> 
-                
                 <label for="proveedor_nombre">Nombre del Proveedor:</label>
                 <input type="text" id="proveedor_nombre" required>
-
                 <label for="proveedor_telefono">Teléfono:</label>
                 <input type="text" id="proveedor_telefono">
-                
                 <label for="proveedor_correo">Correo Electrónico:</label>
                 <input type="email" id="proveedor_correo">
-
                 <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Guardar Proveedor</button>
             </form>
         </div>
@@ -290,17 +339,13 @@
     <script>
         const API_URL = 'http://localhost:4000/api';
         
-        
         let token = localStorage.getItem('token');
         let tenantId = localStorage.getItem('tenant_id');
         let rol = localStorage.getItem('rol'); 
 
-
         let proveedoresCache = []; 
 
-
         function showView(viewId) {
-
             const views = document.querySelectorAll('.view-content');
             views.forEach(view => view.classList.remove('active'));
 
@@ -308,14 +353,20 @@
             
             if (viewId === 'proveedores-view') {
                 loadProveedores();
+            } else if (viewId === 'registrar-producto-view') {
+                openProductModal();
+                showView('inventario-view'); 
             }
         }
 
         function logout() {
-            localStorage.clear(); 
-            window.location.href = 'login.html';
+            if (confirm('¿Estás seguro de que deseas cerrar la sesión?')) {
+                localStorage.clear(); 
+                window.location.href = 'login.html'; 
+            }
         }
 
+        // --- LÓGICA DE PROVEEDOR ---
         function openProveedorModal() {
             document.getElementById('proveedor-modal-title').textContent = 'Agregar Nuevo Proveedor';
             document.getElementById('proveedor-id').value = ''; 
@@ -327,7 +378,6 @@
             document.getElementById('proveedorModal').style.display = 'none';
         }
 
-        
         async function saveProveedor(event) {
             event.preventDefault();
             
@@ -360,7 +410,7 @@
                 if (response.ok && result.success) {
                     alert(`Proveedor ${proveedorData.nombre} ${isEditing ? 'actualizado' : 'creado'} exitosamente.`);
                     closeProveedorModal();
-                    loadProveedores(); // Recarga la tabla
+                    loadProveedores(); 
                 } else {
                     alert('Error al guardar proveedor: ' + (result.message || 'Error desconocido.'));
                 }
@@ -415,7 +465,6 @@
             document.getElementById('proveedorModal').style.display = 'block';
         }
 
-    //Eliminar el proveedor
         async function deleteProveedor(id, name) {
             if (!confirm(`¿Está seguro de que desea eliminar al proveedor "${name}" (ID: ${id})? Esta acción es irreversible.`)) {
                 return;
@@ -467,9 +516,18 @@
             });
         }
         
-        function openProductModal() { /* Lógica de modal de producto aquí */ }
+        // --- LÓGICA DE PRODUCTO (implementación básica) ---
+        function openProductModal() { 
+            document.getElementById('modal-title').textContent = 'Agregar Nuevo Producto';
+            document.getElementById('product-id').value = ''; 
+            document.getElementById('productForm').reset();
+            document.getElementById('productModal').style.display = 'block';
+        }
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
         async function loadInventory() { console.log('loadInventory() deshabilitado por el momento.'); }
-        function saveProduct(event) { event.preventDefault(); alert('Funcionalidad de guardar producto deshabilitada.'); }
+        function saveProduct(event) { event.preventDefault(); alert('Funcionalidad de guardar producto deshabilitada.'); closeProductModal(); }
         function previewLogo(event) {
             const logo = document.getElementById('company-logo');
             const file = event.target.files[0];
@@ -479,7 +537,7 @@
             }
         }
 
-
+        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', async () => {
             if (!token || !tenantId || rol !== 'administrador') {
                 alert('Sesión no válida o no tienes permisos. Redirigiendo a login.');
@@ -495,6 +553,7 @@
             showView('inventario-view'); 
         });
 
+        // --- LISTENERS ---
         document.getElementById('proveedorForm').addEventListener('submit', saveProveedor);
         document.getElementById('productForm').addEventListener('submit', saveProduct); 
     </script>
