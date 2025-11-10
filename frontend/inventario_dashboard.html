@@ -9,7 +9,18 @@
 </head>
 <body>
 <!-- Hola -->
-    <nav class="top-menu">
+    
+
+    <div id="main-view-container">
+
+        <div id="inventario-view" class="view-content active">
+            <div class="dashboard-header">
+                <div class="header-left">
+                    <h1 id="welcome-message">Bienvenido, Administrador.</h1>
+                    <p>Gestión de Inventario de <span id="company-name-display">Tu Empresa</span></p>
+                </div>
+            </div>
+            <nav class="top-menu">
         <div class="menu-left">
             <a href="#" class="menu-item">Archivo</a>
             
@@ -40,16 +51,6 @@
         
         <a href="#" class="menu-item logout-link" onclick="logout()">Cerrar Sesión 🔒</a>
     </nav>
-
-    <div id="main-view-container">
-
-        <div id="inventario-view" class="view-content active">
-            <div class="dashboard-header">
-                <div class="header-left">
-                    <h1 id="welcome-message">Bienvenido, Administrador.</h1>
-                    <p>Gestión de Inventario de <span id="company-name-display">Tu Empresa</span></p>
-                </div>
-            </div>
             
             <div class="container main-content">
                 <div class="inventory-section">

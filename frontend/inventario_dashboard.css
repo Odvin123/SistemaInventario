@@ -141,7 +141,7 @@ body {
   color: white;
   padding: 24px 40px;
   border-radius: 12px;
-  margin-bottom: 30px;
+  /* margin-bottom: 30px; */
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
