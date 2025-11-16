@@ -27,7 +27,7 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// Crear una nueva Categoría (CREATE) ---
+// Crear una nueva Categoría 
 router.post('/', verifyToken, async (req, res) => {
     if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
         return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });

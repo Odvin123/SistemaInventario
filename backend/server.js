@@ -98,7 +98,7 @@ app.get('/api/check-tenant/:tenantId', async (req, res) => {
 //Cambio de Contraseña Forzado
 app.post('/api/cambio-pw-forzado', async (req, res) => {
     const { tenant_id, correo_electronico, new_password } = req.body;
-    // ... (El cuerpo de la función sigue siendo el mismo) ...
+
     if (!tenant_id || !correo_electronico || !new_password) {
         return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
     }
@@ -137,7 +137,7 @@ app.post('/api/cambio-pw-forzado', async (req, res) => {
 //Registros y Login de los Usuarios
 app.post('/api/login', async (req, res) => {
     const { tenant_id, correo_electronico, password } = req.body;
-    // ... (El cuerpo de la función sigue siendo el mismo) ...
+
     if (!tenant_id || !correo_electronico || !password) {
         return res.status(400).json({ success: false, message: 'Faltan credenciales.' });
     }
@@ -156,7 +156,7 @@ app.post('/api/login', async (req, res) => {
         }
 
         const usuario = result.rows[0];
-        // Nota: Asegúrate de que estás usando bcrypt.compare(password, hash)
+
         const passwordMatch = await bcrypt.compare(password, usuario.password_hash); 
 
         if (!passwordMatch) {
