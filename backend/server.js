@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const cors = require('cors'); 
 const nodemailer = require('nodemailer'); 
 const jwt = require('jsonwebtoken'); 
@@ -31,6 +32,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Funciones auxiliares
+function generateSixDigitCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+// Función para generar un token seguro y aleatorio.
+function generateSecureToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
 
 // Función para generar una contraseña aleatoria y seguras.
 function generateRandomPassword(length = 12) {
@@ -83,6 +92,192 @@ app.get('/api/check-tenant/:tenantId', async (req, res) => {
     }
 });
 
+app.post('/api/solicitar-reset-pw', async (req, res) => {
+    const { tenant_id, correo_electronico } = req.body;
+
+    if (!tenant_id || !correo_electronico) {
+        return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
+    }
+
+    try {
+        const userResult = await db.query(
+            `SELECT u.id, u.nombre, e.nombre_empresa 
+             FROM usuarios u 
+             JOIN empresas e ON u.empresa_id = e.id 
+             WHERE u.correo_electronico = $1 AND e.tenant_id = $2`,
+            [correo_electronico, tenant_id]
+        );
+
+        if (userResult.rowCount === 0) {
+            return res.status(404).json({ success: false, message: 'Credenciales de acceso no encontradas.' });
+        }
+        
+        const { id: usuarioId, nombre, nombre_empresa } = userResult.rows[0];
+        const tokenCode = generateSixDigitCode();
+        
+        //15 minutos de expiración
+        const expirationTime = new Date(Date.now() + 15 * 60 * 1000); 
+
+        const client = await db.getClient();
+        try {
+            await client.query('BEGIN');
+
+            await client.query(
+                'UPDATE password_resets SET usado = TRUE WHERE usuario_id = $1 AND expira_en > NOW() AND usado = FALSE',
+                [usuarioId]
+            );
+
+            await client.query(
+                'INSERT INTO password_resets (usuario_id, token_code, expira_en) VALUES ($1, $2, $3)',
+                [usuarioId, tokenCode, expirationTime]
+            );
+
+            await client.query('COMMIT');
+
+        } catch (dbError) {
+            await client.query('ROLLBACK');
+            throw dbError; 
+        } finally {
+            client.release();
+        }
+
+        const mailOptions = {
+            from: `"Soporte InvenSaaS" <${process.env.EMAIL_SERVICE_USER}`, 
+            to: correo_electronico,
+            subject: `🔐 Código de Recuperación de Contraseña - ${nombre_empresa}`,
+            html: `
+                <p>Estimado(a) ${nombre},</p>
+                <p>Use el siguiente código de seguridad para continuar con el proceso:</p>
+                <h2 style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; text-align: center;">
+                    Código de Seguridad: <strong>${tokenCode}</strong>
+                </h2>
+                <p style="color: #dc3545;">
+                    Este código es válido por solo <b>15 minutos</b>.
+                </p>
+            `,
+        };
+        
+        await transporter.sendMail(mailOptions); 
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Código de seguridad enviado a su correo electrónico.' 
+        });
+
+    } catch (error) {
+        console.error('Error al solicitar restablecimiento de contraseña:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor. Intente de nuevo más tarde.' });
+    }
+});
+
+
+
+app.post('/api/validar-reset-code', async (req, res) => {
+    const { tenant_id, correo_electronico, token_code } = req.body;
+
+    if (!tenant_id || !correo_electronico || !token_code) {
+        return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
+    }
+
+    try {
+        const result = await db.query(
+            `SELECT pr.id AS reset_id, pr.expira_en
+             FROM password_resets pr
+             JOIN usuarios u ON pr.usuario_id = u.id
+             JOIN empresas e ON u.empresa_id = e.id
+             WHERE u.correo_electronico = $1 AND e.tenant_id = $2 AND pr.token_code = $3 
+               AND pr.usado = FALSE AND pr.expira_en > NOW()
+             ORDER BY pr.fecha_creacion DESC LIMIT 1`, 
+            [correo_electronico, tenant_id, token_code]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(401).json({ success: false, message: 'Código inválido, expirado o ya utilizado.' });
+        }
+        
+        const resetData = result.rows[0];
+        
+        const resetToken = generateSecureToken();
+        const secureTokenExpiration = new Date(Date.now() + 5 * 60 * 1000); 
+
+        await db.query(
+            `UPDATE password_resets 
+             SET usado = TRUE, secure_token = $1, secure_token_expira_en = $2
+             WHERE id = $3`,
+            [resetToken, secureTokenExpiration, resetData.reset_id]
+        );
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Código verificado con éxito.', 
+            resetToken: resetToken 
+        });
+
+    } catch (error) {
+        console.error('Error al verificar token:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+    }
+});
+
+
+app.post('/api/finalizar-reset-pw', async (req, res) => {
+    const { resetToken, newPassword } = req.body;
+    
+    if (!resetToken || !newPassword) {
+        return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
+    }
+    
+
+    const passwordValid = newPassword.length >= 8 && newPassword.length <= 12 && 
+                          /\d/.test(newPassword) && /[A-Z]/.test(newPassword) && 
+                          !/[^a-zA-Z0-9]/.test(newPassword);
+
+    if (!passwordValid) {
+        return res.status(400).json({ success: false, message: 'La contraseña no cumple los requisitos de seguridad.' });
+    }
+
+    try {
+        const resetResult = await db.query(
+            `SELECT pr.usuario_id, e.tenant_id
+             FROM password_resets pr
+             JOIN usuarios u ON pr.usuario_id = u.id
+             JOIN empresas e ON u.empresa_id = e.id
+             WHERE pr.secure_token = $1 
+               AND pr.secure_token_expira_en > NOW()`, 
+            [resetToken]
+        );
+
+        if (resetResult.rowCount === 0) {
+            return res.status(401).json({ success: false, message: 'Token de restablecimiento inválido o expirado. Vuelva a empezar.' });
+        }
+
+        const { usuario_id, tenant_id } = resetResult.rows[0];
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+        
+        await db.query(
+            `UPDATE usuarios 
+             SET password_hash = $1, necesita_cambio_pw = FALSE 
+             WHERE id = $2`,
+            [newPasswordHash, usuario_id]
+        );
+
+        await db.query(
+            'UPDATE password_resets SET secure_token_expira_en = NOW() WHERE secure_token = $1',
+            [resetToken]
+        );
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Contraseña actualizada correctamente.',
+            tenant_id: tenant_id 
+        });
+
+    } catch (error) {
+        console.error('Error al finalizar el restablecimiento de contraseña:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+    }
+});
+
 //Cambio de Contraseña Forzado
 app.post('/api/cambio-pw-forzado', async (req, res) => {
     const { tenant_id, correo_electronico, new_password } = req.body;
@@ -122,7 +317,7 @@ app.post('/api/cambio-pw-forzado', async (req, res) => {
     }
 });
 
-//Registros y Login de los Usuarios
+//Registros y Login de los Usuarios (Código Corregido)
 app.post('/api/login', async (req, res) => {
     const { tenant_id, correo_electronico, password } = req.body;
 
@@ -153,7 +348,7 @@ app.post('/api/login', async (req, res) => {
         
         const payload = {
             id: usuario.id,
-            tenant_id_str: usuario.tenant_id, 
+            tenant_id: usuario.tenant_id, 
             empresa_id: usuario.empresa_id, 
             rol: usuario.rol
         };

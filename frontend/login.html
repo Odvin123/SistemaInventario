@@ -1,9 +1,11 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iniciar Sesión - InvenSaaS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="StyleLogin.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar Sesión - InvenSaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="StyleLogin.css" /> 
 </head>
 <body>
     <div id="login-container">
@@ -21,6 +23,10 @@
             <button type="submit" id="loginButton">Iniciar Sesión</button>
             <p id="lockoutMessage" style="color: red; display: none; margin-top: 10px;">Demasiados intentos fallidos. Intente de nuevo en <span id="countdown">10</span> segundos.</p>
         </form>
+        
+        <div style="margin-top: 15px;">
+            <a href="#" id="forgotPasswordLink" style="color: var(--primary); text-decoration: none; font-size: 0.9em; font-weight: 500;">¿Se te olvidó la contraseña?</a>
+        </div>
     </div>
 
     <script>
@@ -29,9 +35,7 @@
         const loginButton = document.getElementById('loginButton');
         const lockoutMessage = document.getElementById('lockoutMessage');
         const countdownSpan = document.getElementById('countdown');
-        const passwordInput = document.getElementById('password');
         
-        // Variables para el control de intentos fallidos
         let failCount = 0;
         const MAX_ATTEMPTS = 3;
         const LOCKOUT_DURATION_MS = 10000; 
@@ -46,7 +50,8 @@
             document.getElementById('email').disabled = true;
             document.getElementById('password').disabled = true;
             loginButton.disabled = true;
-            
+            document.getElementById('forgotPasswordLink').style.pointerEvents = 'none';
+
             lockoutMessage.style.display = 'block';
 
             let countdown = duration / 1000;
@@ -70,7 +75,8 @@
             document.getElementById('email').disabled = false;
             document.getElementById('password').disabled = false;
             loginButton.disabled = false;
-            
+            document.getElementById('forgotPasswordLink').style.pointerEvents = 'auto';
+
             lockoutMessage.style.display = 'none';
             alert('El bloqueo temporal ha finalizado. Puede intentar iniciar sesión de nuevo.');
         }
@@ -101,12 +107,12 @@
                 
                 if (response.ok && result.success) {
                     failCount = 0; 
+                    
                     localStorage.setItem('token', result.token); 
-                    localStorage.setItem('rol', result.rol);     
+                    localStorage.setItem('rol', result.rol);
                     localStorage.setItem('tenant_id', result.tenant_id);
 
-                    
-                    sessionStorage.setItem('authToken', result.token); 
+                 sessionStorage.setItem('authToken', result.token); 
                     sessionStorage.setItem('userRol', result.rol);
                     sessionStorage.setItem('tenantId', result.tenant_id);
                     
@@ -122,7 +128,6 @@
                     }
 
                 } else {
-                    // Fallo: Incrementar contador de fallos
                     failCount++;
                     
                     alert('Error de Login: ' + (result.message || 'Credenciales o Puesto/Empresa inválido.'));
@@ -131,12 +136,23 @@
                         setLockout(LOCKOUT_DURATION_MS);
                     } else {
                         const remaining = MAX_ATTEMPTS - failCount;
-                        alert(`Intento fallido. Le quedan ${remaining} intentos antes del bloqueo temporal.`);
+                        if (remaining > 0) {
+                            alert(`Intento fallido. Le quedan ${remaining} intentos antes del bloqueo temporal.`);
+                        }
                     }
                 }
             } catch (e) {
                 alert('Error de conexión con el servidor (API no responde).');
             }
+        });
+        
+        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            const tenantId = document.getElementById('tenantId').value;
+            const email = document.getElementById('email').value;
+
+            window.location.href = `reset_password.html?tenant=${encodeURIComponent(tenantId)}&email=${encodeURIComponent(email)}`;
         });
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -148,3 +164,4 @@
         });
     </script>
 </body>
+</html>
