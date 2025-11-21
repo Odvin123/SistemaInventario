@@ -12,6 +12,18 @@ const checkAdminRole = (req, res, next) => {
 };
 
 router.get('/', verifyToken, async (req, res) => {
+    
+    const esSuperAdmin = req.esSuperAdmin;
+    const empresaId = req.tenantId; 
+
+    let whereClause = '';
+    const queryParams = [];
+    
+    if (!esSuperAdmin) {
+        whereClause = ' WHERE p.empresa_id = $1';
+        queryParams.push(empresaId);
+    }
+    
     try {
         const result = await pool.query(`
             SELECT 
@@ -27,8 +39,9 @@ router.get('/', verifyToken, async (req, res) => {
             FROM productos p
             JOIN categorias c ON p.categoria_id = c.id
             JOIN proveedores pr ON p.proveedor_id = pr.id
+            ${whereClause} 
             ORDER BY p.id DESC
-        `);
+        `, queryParams); 
         
         res.status(200).json({ 
             success: true, 
@@ -45,7 +58,12 @@ router.get('/', verifyToken, async (req, res) => {
 
 // Crear un nuevo Producto 
 router.post('/', verifyToken, checkAdminRole, async (req, res) => {
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
+    }
+    
     const { proveedor_id, categoria_id, descripcion, stock, costo, precio } = req.body;
+    const empresaId = req.tenantId; 
     
     if (!proveedor_id || !categoria_id || !descripcion || stock === undefined || costo === undefined || precio === undefined) {
         return res.status(400).json({ success: false, message: 'Faltan campos obligatorios para el producto.' });
@@ -60,9 +78,22 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     }
 
     try {
+        const validationQuery = `
+            SELECT EXISTS(SELECT 1 FROM categorias WHERE id = $1 AND empresa_id = $3) AS categoria_valida,
+                   EXISTS(SELECT 1 FROM proveedores WHERE id = $2 AND empresa_id = $3) AS proveedor_valido
+        `;
+        const validationResult = await pool.query(validationQuery, [categoria_id, proveedor_id, empresaId]);
+        
+        if (!validationResult.rows[0].categoria_valida || !validationResult.rows[0].proveedor_valido) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'El Proveedor o Categoría seleccionado(s) no existen o no pertenecen a su empresa.' 
+            });
+        }
+        
         const result = await pool.query(
-            'INSERT INTO productos (proveedor_id, categoria_id, descripcion, stock, costo, precio) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, descripcion, stock, costo, precio, categoria_id, proveedor_id',
-            [proveedor_id, categoria_id, descripcion, parsedStock, parsedCosto, parsedPrecio]
+            'INSERT INTO productos (proveedor_id, categoria_id, descripcion, stock, costo, precio, empresa_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, descripcion, stock, costo, precio, categoria_id, proveedor_id',
+            [proveedor_id, categoria_id, descripcion, parsedStock, parsedCosto, parsedPrecio, empresaId]
         );
         
         res.status(201).json({ 
@@ -71,10 +102,10 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
             producto: result.rows[0]
         });
     } catch (err) {
-        if (err.code === '23503') { 
+        if (err.code === '23503') {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Proveedor o Categoría inválida. Asegúrese de que existan.' 
+                message: 'Error al insertar. Proveedor o Categoría inválida. Asegúrese de que existan.' 
             });
         }
         console.error('Error al crear producto:', err);
@@ -85,10 +116,15 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     }
 });
 
-//  Actualizar un Producto 
+// Actualizar un Producto 
 router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
+    }
+    
     const { id } = req.params;
     const { proveedor_id, categoria_id, descripcion, stock, costo, precio } = req.body;
+    const empresaId = req.tenantId;
 
     if (!proveedor_id || !categoria_id || !descripcion || stock === undefined || costo === undefined || precio === undefined) {
         return res.status(400).json({ success: false, message: 'Faltan campos obligatorios para la actualización.' });
@@ -103,13 +139,26 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
     }
 
     try {
+        const validationQuery = `
+            SELECT EXISTS(SELECT 1 FROM categorias WHERE id = $1 AND empresa_id = $3) AS categoria_valida,
+                   EXISTS(SELECT 1 FROM proveedores WHERE id = $2 AND empresa_id = $3) AS proveedor_valido
+        `;
+        const validationResult = await pool.query(validationQuery, [categoria_id, proveedor_id, empresaId]);
+        
+        if (!validationResult.rows[0].categoria_valida || !validationResult.rows[0].proveedor_valido) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'El Proveedor o Categoría seleccionado(s) no existen o no pertenecen a su empresa.' 
+            });
+        }
+        
         const result = await pool.query(
-            'UPDATE productos SET proveedor_id = $1, categoria_id = $2, descripcion = $3, stock = $4, costo = $5, precio = $6 WHERE id = $7 RETURNING id',
-            [proveedor_id, categoria_id, descripcion, parsedStock, parsedCosto, parsedPrecio, id]
+            'UPDATE productos SET proveedor_id = $1, categoria_id = $2, descripcion = $3, stock = $4, costo = $5, precio = $6 WHERE id = $7 AND empresa_id = $8 RETURNING id',
+            [proveedor_id, categoria_id, descripcion, parsedStock, parsedCosto, parsedPrecio, id, empresaId]
         );
         
         if (result.rowCount === 0) {
-            return res.status(404).json({ success: false, message: 'Producto no encontrado.' });
+            return res.status(404).json({ success: false, message: 'Producto no encontrado o no pertenece a esta empresa.' });
         }
         
         res.status(200).json({ 
@@ -117,10 +166,10 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
             message: 'Producto actualizado exitosamente.' 
         });
     } catch (err) {
-        if (err.code === '23503') { 
+        if (err.code === '23505' || err.code === '23503') { 
             return res.status(400).json({ 
                 success: false, 
-                message: 'Proveedor o Categoría inválida. Asegúrese de que existan.' 
+                message: 'Error de integridad de datos.' 
             });
         }
         console.error('Error al actualizar producto:', err);
@@ -130,23 +179,28 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
 
 // Eliminar un producto 
 router.delete('/:id', verifyToken, checkAdminRole, async (req, res) => {
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
+    }
+    
     const { id } = req.params;
+    const empresaId = req.tenantId;
 
     try {
         const result = await pool.query(
-            'DELETE FROM productos WHERE id = $1',
-            [id]
+            'DELETE FROM productos WHERE id = $1 AND empresa_id = $2',
+            [id, empresaId]
         );
         
         if (result.rowCount === 0) {
-            return res.status(404).json({ success: false, message: 'Producto no encontrado.' });
+            return res.status(404).json({ success: false, message: 'Producto no encontrado o no pertenece a esta empresa.' });
         }
         
         res.status(200).json({ success: true, message: 'Producto eliminado exitosamente.' });
     } catch (err) {
         console.error('Error al eliminar producto:', err);
         res.status(500).json({ success: false, message: 'Error interno del servidor al eliminar producto.' });
- }
+    }
 });
 
 module.exports = router;

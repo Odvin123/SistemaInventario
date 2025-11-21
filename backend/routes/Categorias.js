@@ -3,16 +3,24 @@ const router = express.Router();
 const pool = require('../db'); 
 const { verifyToken } = require('../middleware/auth'); 
 
+// Listar todas las Categorías de la empresa (o global si es SuperAdmin)
 router.get('/', verifyToken, async (req, res) => {
-  
-    if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    
+    const esSuperAdmin = req.esSuperAdmin;
+    const empresaId = req.tenantId; 
+    
+    let queryText = 'SELECT id, nombre FROM categorias';
+    const queryParams = [];
+    
+    if (!esSuperAdmin) {
+        queryText += ' WHERE empresa_id = $1';
+        queryParams.push(empresaId);
     }
     
+    queryText += ' ORDER BY nombre';
+    
     try {
-        const result = await pool.query(
-            'SELECT id, nombre FROM categorias ORDER BY nombre'
-        );
+        const result = await pool.query(queryText, queryParams);
         
         res.status(200).json({ 
             success: true, 
@@ -29,12 +37,13 @@ router.get('/', verifyToken, async (req, res) => {
 
 // Crear una nueva Categoría 
 router.post('/', verifyToken, async (req, res) => {
-    if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
     }
-
     
+
     const { nombre } = req.body;
+    const empresaId = req.tenantId; 
     
     if (!nombre || nombre.trim() === '') {
         return res.status(400).json({ 
@@ -44,21 +53,22 @@ router.post('/', verifyToken, async (req, res) => {
     }
 
     try {
+
         const check = await pool.query(
-            'SELECT * FROM categorias WHERE LOWER(nombre) = LOWER($1)',
-            [nombre]
+            'SELECT * FROM categorias WHERE LOWER(nombre) = LOWER($1) AND empresa_id = $2',
+            [nombre, empresaId]
         );
 
         if (check.rows.length > 0) {
             return res.status(409).json({ 
                 success: false, 
-                message: `Ya existe una categoría con el nombre "${nombre}".` 
+                message: `Ya existe una categoría con el nombre "${nombre}" para su empresa.` 
             });
         }
         
         const result = await pool.query(
-            'INSERT INTO categorias (nombre) VALUES ($1) RETURNING id, nombre',
-            [nombre]
+            'INSERT INTO categorias (nombre, empresa_id) VALUES ($1, $2) RETURNING id, nombre',
+            [nombre, empresaId]
         );
         
         res.status(201).json({ 
@@ -77,12 +87,13 @@ router.post('/', verifyToken, async (req, res) => {
 
 // ACTUALIZAR una Categoría 
 router.put('/:id', verifyToken, async (req, res) => {
-    if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
     }
 
     const { id } = req.params;
     const { nombre } = req.body;
+    const empresaId = req.tenantId;
 
     if (!nombre || nombre.trim() === '') {
         return res.status(400).json({ 
@@ -93,14 +104,14 @@ router.put('/:id', verifyToken, async (req, res) => {
     
     try {
         const result = await pool.query(
-            'UPDATE categorias SET nombre = $1 WHERE id = $2 RETURNING id, nombre',
-            [nombre, id]
+            'UPDATE categorias SET nombre = $1 WHERE id = $2 AND empresa_id = $3 RETURNING id, nombre',
+            [nombre, id, empresaId]
         );
         
         if (result.rowCount === 0) {
             return res.status(404).json({ 
                 success: false, 
-                message: 'Categoría no encontrada.' 
+                message: 'Categoría no encontrada o no pertenece a su empresa.' 
             });
         }
         
@@ -120,23 +131,23 @@ router.put('/:id', verifyToken, async (req, res) => {
 
 // Eliminar una Categoría 
 router.delete('/:id', verifyToken, async (req, res) => {
-    // 1. Verificar Rol
-    if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
     }
 
     const { id } = req.params;
+    const empresaId = req.tenantId;
 
     try {
         const result = await pool.query(
-            'DELETE FROM categorias WHERE id = $1',
-            [id]
+            'DELETE FROM categorias WHERE id = $1 AND empresa_id = $2',
+            [id, empresaId]
         );
         
         if (result.rowCount === 0) {
             return res.status(404).json({ 
                 success: false, 
-                message: 'Categoría no encontrada.' 
+                message: 'Categoría no encontrada o no pertenece a su empresa.' 
             });
         }
         

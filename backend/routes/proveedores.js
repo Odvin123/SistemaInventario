@@ -3,25 +3,28 @@ const router = express.Router();
 const db = require('../db'); 
 const { verifyToken } = require('../middleware/auth');
 
+// Listar Proveedores
 router.get('/', verifyToken, async (req, res) => {
-    if (req.usuario.rol !== 'administrador') {
+    if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
         return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
     }
     
-    try {
-        const empresaResult = await db.query(
-            'SELECT empresa_id FROM usuarios WHERE id = $1',
-            [req.usuario.id]
-        );
-        if (empresaResult.rowCount === 0) {
-            return res.status(404).json({ success: false, message: 'ID de empresa no encontrado para el usuario.' });
-        }
-        const empresaId = empresaResult.rows[0].empresa_id;
+    const esSuperAdmin = req.esSuperAdmin;
+    const empresaId = req.tenantId; 
 
-        const result = await db.query(
-            'SELECT id, nombre, telefono, correo_contacto FROM proveedores WHERE empresa_id = $1 ORDER BY nombre ASC',
-            [empresaId]
-        );
+    let queryText = 'SELECT id, nombre, telefono, correo_contacto FROM proveedores';
+    const queryParams = [];
+
+    if (!esSuperAdmin) {
+        queryText += ' WHERE empresa_id = $1';
+        queryParams.push(empresaId);
+    }
+    
+    queryText += ' ORDER BY nombre ASC';
+    
+    try {
+
+        const result = await db.query(queryText, queryParams);
 
         return res.status(200).json({ 
             success: true, 
@@ -34,24 +37,20 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-//  Crear Nuevo Proveedor
+// Crear Nuevo Proveedor
 router.post('/', verifyToken, async (req, res) => {
-    if (req.usuario.rol !== 'administrador') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+        if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
     }
-
+    
     const { nombre, telefono, correo_contacto } = req.body;
+    const empresaId = req.tenantId; 
     
     if (!nombre) {
         return res.status(400).json({ success: false, message: 'El nombre del proveedor es obligatorio.' });
     }
     
     try {
-        const empresaResult = await db.query(
-            'SELECT empresa_id FROM usuarios WHERE id = $1',
-            [req.usuario.id]
-        );
-        const empresaId = empresaResult.rows[0].empresa_id;
 
         const result = await db.query(
             `INSERT INTO proveedores (empresa_id, nombre, telefono, correo_contacto) 
@@ -74,25 +73,21 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-//  Editar Proveedor
+// Editar Proveedor
 router.put('/:id', verifyToken, async (req, res) => {
-    if (req.usuario.rol !== 'administrador') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
     }
 
     const proveedorId = req.params.id;
     const { nombre, telefono, correo_contacto } = req.body;
+    const empresaId = req.tenantId; 
 
     if (!nombre) {
         return res.status(400).json({ success: false, message: 'El nombre del proveedor es obligatorio.' });
     }
 
     try {
-        const empresaResult = await db.query(
-            'SELECT empresa_id FROM usuarios WHERE id = $1',
-            [req.usuario.id]
-        );
-        const empresaId = empresaResult.rows[0].empresa_id;
 
         const updateResult = await db.query(
             `UPDATE proveedores
@@ -123,18 +118,15 @@ router.put('/:id', verifyToken, async (req, res) => {
 
 // Eliminar Proveedor
 router.delete('/:id', verifyToken, async (req, res) => {
-    if (req.usuario.rol !== 'administrador') {
-        return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });
+    if (!req.tenantId) {
+        return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
     }
 
     const proveedorId = req.params.id;
+    const empresaId = req.tenantId; 
 
     try {
-        const empresaResult = await db.query(
-            'SELECT empresa_id FROM usuarios WHERE id = $1',
-            [req.usuario.id]
-        );
-        const empresaId = empresaResult.rows[0].empresa_id;
+
 
         const deleteResult = await db.query(
             'DELETE FROM proveedores WHERE id = $1 AND empresa_id = $2 RETURNING id',

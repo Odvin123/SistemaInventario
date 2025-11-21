@@ -12,6 +12,7 @@ const verifyToken = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
+      
         req.usuario = decoded; 
         
         next(); 
@@ -24,7 +25,7 @@ const verifyToken = (req, res, next) => {
 
 const checkRole = (roles) => {
     return (req, res, next) => {
-
+   
         if (!req.usuario || !roles.includes(req.usuario.rol)) {
             return res.status(403).json({ success: false, message: 'Acceso denegado. Rol no autorizado.' });
         }

@@ -6,6 +6,10 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken'); 
 const db = require('./db'); 
 
+// IMPORTACIÓN DE MIDDLEWARES
+const { verifyToken } = require('./middleware/auth'); 
+const { setTenant } = require('./middleware/setTenant'); 
+
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -14,6 +18,7 @@ const proveedoresRouter = require('./routes/proveedores');
 const categoriasRouter = require('./routes/Categorias');
 const productosRouter = require('./routes/productos');
 const ventasRouter = require('./routes/ventas');
+
 
 // Configuración del servicio de correo
 const transporter = nodemailer.createTransport({
@@ -26,25 +31,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Middleware para verificar JWT en rutas protegidas
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, message: 'Acceso denegado. No se proporcionó Token.' });
-    }
-
-    const token = authHeader.split(' ')[1]; 
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.usuario = decoded; 
-        next(); 
-
-    } catch (err) {
-        return res.status(403).json({ success: false, message: 'Token inválido o expirado.' });
-    }
-};
 // Función para generar una contraseña aleatoria y seguras.
 function generateRandomPassword(length = 12) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
@@ -66,11 +53,12 @@ app.get('/', (req, res) => {
 });
 
 
-// Rutas Modulares
-app.use('/api/admin/proveedores', proveedoresRouter); 
-app.use('/api/admin/categorias', categoriasRouter);
-app.use('/api/admin/productos', productosRouter);
-app.use('/api/admin/ventas', ventasRouter);
+// RUTAS MODULARES CON AISLAMIENTO (verifyToken, setTenant)
+// Todas las rutas de inventario de una empresa deben usar ambos middlewares.
+app.use('/api/admin/proveedores', verifyToken, setTenant, proveedoresRouter); 
+app.use('/api/admin/categorias', verifyToken, setTenant, categoriasRouter);
+app.use('/api/admin/productos', verifyToken, setTenant, productosRouter);
+app.use('/api/admin/ventas', verifyToken, setTenant, ventasRouter);
 
 
 // Evitar Duplicados de Tenant ID
@@ -144,7 +132,7 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const result = await db.query(
-            `SELECT u.*, e.tenant_id 
+            `SELECT u.*, e.tenant_id, e.id AS empresa_id
              FROM usuarios u
              JOIN empresas e ON u.empresa_id = e.id
              WHERE u.correo_electronico = $1 AND e.tenant_id = $2`,
@@ -165,7 +153,8 @@ app.post('/api/login', async (req, res) => {
         
         const payload = {
             id: usuario.id,
-            tenantId: usuario.tenant_id,
+            tenant_id_str: usuario.tenant_id, 
+            empresa_id: usuario.empresa_id, 
             rol: usuario.rol
         };
 
@@ -392,9 +381,9 @@ app.post('/api/admin/reset-pw', verifyToken, async (req, res) => {
             to: correo_electronico, 
             subject: `⚠️ Aviso de Reseteo de Contraseña - ${nombreEmpresa}`,
             html: `
-                <p>Estimado Administrador de **${nombreEmpresa}** (${tenant_id}),</p>
+                <p>Estimado Administrador de <b>${nombreEmpresa}</b> (${tenant_id}),</p>
                 <p>Su contraseña ha sido restablecida por un SuperAdmin.</p>
-                <p>Para acceder al sistema debe usar la siguiente contraseña temporal y será **forzado a cambiarla** inmediatamente:</p>
+                <p>Para acceder al sistema debe usar la siguiente contraseña temporal y será <b>forzado a cambiarla</b> inmediatamente:</p>
                 <h3 style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc;">Contraseña Temporal: <strong>${passwordToHash}</strong></h3>
                 <p>Use este enlace para acceder:</p>
                 <a href="${resetLink}" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Ir a Iniciar Sesión</a>
