@@ -4,7 +4,9 @@ const router = express.Router();
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
 
-// POST /api/admin/inventario/entradas — Registrar entrada de inventario
+// ==================================================================================
+// 1. REGISTRAR ENTRADA MANUAL (ej: compra de inventario)
+// ==================================================================================
 router.post('/', verifyToken, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin.' });
@@ -32,7 +34,7 @@ router.post('/', verifyToken, async (req, res) => {
         for (const item of productos) {
             const { producto_id, cantidad } = item;
 
-            // 1. Verificar que el producto existe y pertenece a la empresa
+            // Verificar que el producto existe y pertenece a la empresa
             const productoRes = await client.query(
                 'SELECT id, stock FROM productos WHERE id = $1 AND empresa_id = $2 FOR UPDATE',
                 [producto_id, empresaId]
@@ -45,18 +47,27 @@ router.post('/', verifyToken, async (req, res) => {
             const stockActual = productoRes.rows[0].stock;
             const nuevoStock = stockActual + cantidad;
 
-            // 2. Actualizar stock
+            // Actualizar stock
             await client.query(
                 'UPDATE productos SET stock = $1 WHERE id = $2',
                 [nuevoStock, producto_id]
             );
 
-            // 3. Registrar movimiento
+            // Registrar movimiento
             await client.query(
                 `INSERT INTO movimientos_inventario 
                  (empresa_id, producto_id, tipo, cantidad, nuevo_stock, usuario_id, referencia, motivo)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [empresaId, producto_id, 'ENTRADA', cantidad, nuevoStock, usuarioId, referencia || 'COMPRA-MANUAL', motivo || null]
+                [
+                    empresaId,
+                    producto_id,
+                    'ENTRADA',
+                    cantidad,
+                    nuevoStock,
+                    usuarioId,
+                    referencia || 'COMPRA-MANUAL',
+                    motivo || null
+                ]
             );
         }
 
@@ -76,17 +87,22 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/inventario/entradas — Listar movimientos (solo ENTRADAS, o filtrar por tipo)
+// ==================================================================================
+// 2. LISTAR MOVIMIENTOS (con filtro por TIPO y fechas)
+// ==================================================================================
 router.get('/', verifyToken, async (req, res) => {
+    // ✅ Corrección clave: manejar tipo con mayúsculas y valor por defecto
     let { tipo, inicio, fin } = req.query;
-    tipo = (tipo || 'TODOS').toUpperCase();
+    tipo = (tipo || 'TODOS').toUpperCase(); // ← Asegura 'ENTRADA', 'SALIDA', etc.
+    const empresaId = req.tenantId;
 
     if (!empresaId) {
         return res.status(403).json({ success: false, message: 'Acceso denegado.' });
     }
 
+    // Validar tipo
     if (!['ENTRADA', 'SALIDA', 'AJUSTE', 'TODOS'].includes(tipo)) {
-        return res.status(400).json({ success: false, message: 'Tipo inválido.' });
+        return res.status(400).json({ success: false, message: 'Tipo inválido. Use: ENTRADA, SALIDA, AJUSTE o TODOS.' });
     }
 
     let queryText = `
@@ -110,12 +126,14 @@ router.get('/', verifyToken, async (req, res) => {
     const params = [empresaId];
     let idx = 2;
 
+    // Filtro por tipo
     if (tipo !== 'TODOS') {
         queryText += ` AND m.tipo = $${idx}`;
         params.push(tipo);
         idx++;
     }
 
+    // Filtro por rango de fechas
     if (inicio && fin) {
         queryText += ` AND m.fecha::date BETWEEN $${idx} AND $${idx + 1}`;
         params.push(inicio, fin);
@@ -126,7 +144,7 @@ router.get('/', verifyToken, async (req, res) => {
 
     try {
         const result = await pool.query(queryText, params);
-        res.json({ success: true, movimientos: result.rows });
+        res.status(200).json({ success: true, movimientos: result.rows });
     } catch (error) {
         console.error('Error al listar movimientos:', error);
         res.status(500).json({ success: false, message: 'Error al cargar movimientos.' });

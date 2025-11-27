@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db'); 
 const { verifyToken } = require('../middleware/auth'); 
 
+// Middleware para roles administrativos
 const checkAdminRole = (req, res, next) => {
     const rol = req.usuario.rol;
     if (rol !== 'administrador' && rol !== 'super_admin') {
@@ -11,8 +12,10 @@ const checkAdminRole = (req, res, next) => {
     next();
 };
 
+// ==================================================================================
+// 1. LISTAR PRODUCTOS
+// ==================================================================================
 router.get('/', verifyToken, async (req, res) => {
-    
     const esSuperAdmin = req.esSuperAdmin;
     const empresaId = req.tenantId; 
 
@@ -56,7 +59,9 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// Crear un nuevo Producto 
+// ==================================================================================
+// 2. CREAR PRODUCTO (+ REGISTRO AUTOMÁTICO DE ENTRADA SI STOCK > 0)
+// ==================================================================================
 router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
@@ -78,6 +83,7 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     }
 
     try {
+        // Validar que proveedor y categoría existen y pertenecen a la empresa
         const validationQuery = `
             SELECT EXISTS(SELECT 1 FROM categorias WHERE id = $1 AND empresa_id = $3) AS categoria_valida,
                    EXISTS(SELECT 1 FROM proveedores WHERE id = $2 AND empresa_id = $3) AS proveedor_valido
@@ -91,10 +97,30 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
             });
         }
         
+        // Insertar producto
         const result = await pool.query(
             'INSERT INTO productos (proveedor_id, categoria_id, descripcion, stock, costo, precio, empresa_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, descripcion, stock, costo, precio, categoria_id, proveedor_id',
             [proveedor_id, categoria_id, descripcion, parsedStock, parsedCosto, parsedPrecio, empresaId]
         );
+
+        // ✅ REGISTRAR ENTRADA AUTOMÁTICA SI STOCK > 0
+        if (parsedStock > 0) {
+            await pool.query(
+                `INSERT INTO movimientos_inventario 
+                 (empresa_id, producto_id, tipo, cantidad, nuevo_stock, usuario_id, referencia, motivo)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [
+                    empresaId,
+                    result.rows[0].id,
+                    'ENTRADA',
+                    parsedStock,
+                    parsedStock,
+                    req.usuario.id,
+                    'STOCK-INICIAL',
+                    'Stock inicial al crear el producto'
+                ]
+            );
+        }
         
         res.status(201).json({ 
             success: true, 
@@ -116,7 +142,9 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     }
 });
 
-// Actualizar un Producto 
+// ==================================================================================
+// 3. ACTUALIZAR PRODUCTO
+// ==================================================================================
 router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
@@ -139,6 +167,7 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
     }
 
     try {
+        // Validar proveedor y categoría
         const validationQuery = `
             SELECT EXISTS(SELECT 1 FROM categorias WHERE id = $1 AND empresa_id = $3) AS categoria_valida,
                    EXISTS(SELECT 1 FROM proveedores WHERE id = $2 AND empresa_id = $3) AS proveedor_valido
@@ -152,6 +181,7 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
             });
         }
         
+        // Actualizar producto
         const result = await pool.query(
             'UPDATE productos SET proveedor_id = $1, categoria_id = $2, descripcion = $3, stock = $4, costo = $5, precio = $6 WHERE id = $7 AND empresa_id = $8 RETURNING id',
             [proveedor_id, categoria_id, descripcion, parsedStock, parsedCosto, parsedPrecio, id, empresaId]
@@ -177,7 +207,9 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
     }
 });
 
-// Eliminar un producto 
+// ==================================================================================
+// 4. ELIMINAR PRODUCTO
+// ==================================================================================
 router.delete('/:id', verifyToken, checkAdminRole, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
