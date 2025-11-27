@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Ventas | InvenSaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/reporte_ventas.css">
+    <link rel="stylesheet" href="css/StyleLogin.css"> <!-- Reutiliza estilos comunes (colores, botones) -->
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.history.back()">
+                ⬅️ Volver al Panel Principal
+            </button>
+        </div>
+
+        <h1>Reporte Detallado de Ventas</h1>
+
+        <!-- Filtros de Fecha -->
+        <div class="filters-section">
+            <div class="date-filter">
+                <label for="fecha-inicio">Fecha Inicial:</label>
+                <input type="date" id="fecha-inicio">
+            </div>
+            <div class="date-filter">
+                <label for="fecha-fin">Fecha Final:</label>
+                <input type="date" id="fecha-fin">
+            </div>
+            <div class="filter-actions">
+                <button class="btn-primary" id="btn-mostrar">Mostrar Detalles</button>
+                <button class="btn-secondary" id="btn-refrescar">Refrescar (Todas)</button>
+            </div>
+        </div>
+
+        <!-- Tabla de Ventas -->
+        <div class="table-container">
+            <table id="ventas-table" class="data-table">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Fecha y Hora</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Productos</th>
+                        <th>Subtotal</th>
+                        <th>Impuesto</th>
+                        <th>Descuento</th>
+                        <th>Total</th>
+                        <th>Factura</th>
+                    </tr>
+                </thead>
+                <tbody id="ventas-tbody">
+                    <tr>
+                        <td colspan="10" class="loading">Cargando ventas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Total Acumulado -->
+        <div class="total-section">
+            <h3>Total Acumulado: <span id="total-acumulado">C$0.00</span></h3>
+        </div>
+    </div>
+
+    <script src="js/reporte_ventas.js"></script>
+</body>
+</html>

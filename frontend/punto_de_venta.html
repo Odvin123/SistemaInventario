@@ -93,10 +93,12 @@
         
         <footer class="pos-footer">
             <div class="footer-info">
-                <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
-                <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openWindow('clientes.html')" style="cursor: pointer;">PUBLICO EN GENERAL</span></span>     
-                <span>Vendedor: <span class="footer-data" id="footer-vendedor" ondblclick="openWindow('vendedores.html')" style="cursor: pointer;">MOSTRADOR</span></span>
-            </div>
+    <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
+    
+    <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openClienteSelectionModal()" style="cursor: pointer;">PUBLICO EN GENERAL</span></span> 
+    
+    <span>Vendedor: <span class="footer-data" id="footer-vendedor" ondblclick="openVendedorSelectionModal()" style="cursor: pointer;">MOSTRADOR</span></span>
+</div>
             <div class="date-time-box">
                 <time id="current-date">--</time>
                 <time id="current-time">--</time>
@@ -234,49 +236,32 @@
 
             document.getElementById('footer-cliente').textContent = currentCliente;
             document.getElementById('footer-vendedor').textContent = currentVendedor;
-        }
 
-        window.updateSelectedEntity = function(type, name) {
-            if (type === 'cliente') {
-                localStorage.setItem('currentClienteName', name);
-                document.getElementById('footer-cliente').textContent = name;
-                // Aquí podrías guardar el ID real del cliente en otra variable o localStorage
-            } else if (type === 'vendedor') {
-                localStorage.setItem('currentVendedorName', name);
-                document.getElementById('footer-vendedor').textContent = name;
-            }
-        }
+            if (!localStorage.getItem('currentClienteId')) localStorage.setItem('currentClienteId', 1);
+        if (!localStorage.getItem('currentVendedorId')) localStorage.setItem('currentVendedorId', 1);
+    }
         
-        // Función placeholder para manejar F6 (Corte de caja)
-        function handleCorteCaja() {
-            // Implementación de lógica para Corte de caja
-            alert("Función 'Corte caja (F6)' no implementada en este ejemplo.");
-        }
 
-        // Función placeholder para manejar F9 (Cancelar NV)
-        function handleCancelarNV() {
-            // Implementación de lógica para Cancelar NV
-            alert("Función 'Cancelar NV (F9)' no implementada en este ejemplo.");
-        }
-        
-        function openWindow(url) {
-            const width = 1000;
-            const height = 700;
-            const left = (screen.width / 2) - (width / 2);
-            const top = (screen.height / 2) - (height / 2);
-            
-            const newWindow = window.open(
-                url,
-                'SeleccionPOSWindow', 
-                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
-            );
+        function selectClientFromModal(name, id) {
+    updateSelectedEntity('cliente', name, id); // <-- 🔑 Clave 1: Llama a la función central
+    closeClienteSelectionModal();
+}
 
-            if (newWindow) {
-                newWindow.focus();
-            } else {
-                alert('El navegador bloqueó la ventana emergente. Por favor, permítalas.');
-            }
+function selectVendedorFromModal(name, id) {
+    updateSelectedEntity('vendedor', name, id); // <-- 🔑 Clave 1: Llama a la función central
+    closeVendedorSelectionModal();
+}
+window.updateSelectedEntity = function(type, name, id) {
+        if (type === 'cliente') {
+            localStorage.setItem('currentClienteName', name);
+            localStorage.setItem('currentClienteId', id); 
+            document.getElementById('footer-cliente').textContent = name;
+        } else if (type === 'vendedor') {
+            localStorage.setItem('currentVendedorName', name);
+            localStorage.setItem('currentVendedorId', id); 
+            document.getElementById('footer-vendedor').textContent = name;
         }
+    }
 
         function openMovimientoVentasModal() {
             if (!token) {
@@ -305,6 +290,130 @@
             document.getElementById('busquedaProductoModal').style.display = 'none';
         }
         
+
+   function openClienteSelectionModal() {
+    // Es importante verificar el token/sesión aquí
+    if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; } 
+    
+    // Muestra el modal (DEBE COINCIDIR CON EL ID DEL DIV)
+    document.getElementById('clienteSelectionModal').style.display = 'block';
+    
+    // Carga los datos la primera vez o si están vacíos
+    if (clientesCachePOS.length === 0) {
+        loadClientesForPOS();
+    } else {
+        renderClientesForPOS(clientesCachePOS);
+    }
+}
+
+    function closeClienteSelectionModal() {
+        document.getElementById('clienteSelectionModal').style.display = 'none';
+    }
+
+    async function loadClientesForPOS() {
+        const clientes = await fetchData('clientes'); 
+        clientesCachePOS = clientes;
+        renderClientesForPOS(clientes);
+    }
+
+   function renderClientesForPOS(clientes) {
+    // ... (código para inicializar la tabla)
+    clientes.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.nombre}</td>
+            <td style="text-align: center;">
+                <button class="btn-primary" 
+                        onclick="selectClientFromModal('${c.nombre.replace(/'/g, "\\'")}', ${c.id})" // <-- ¡AQUÍ ESTÁ LA CLAVE!
+                        style="...">
+                    Seleccionar
+                </button>
+            </td>
+        `;
+        
+    });
+}
+
+    function selectClientFromModal(name, id) {
+        updateSelectedEntity('cliente', name, id); 
+        closeClienteSelectionModal();
+    }
+
+    function filterClientesPOS() {
+        const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
+        
+        const clientesFiltrados = clientesCachePOS.filter(c => 
+            c.nombre.toLowerCase().includes(filtro) || 
+            c.id.toString().includes(filtro) 
+        );
+        renderClientesForPOS(clientesFiltrados);
+    }
+
+    function openVendedorSelectionModal() {
+    // Es importante verificar el token/sesión aquí
+    if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; }
+    
+    // Muestra el modal (DEBE COINCIDIR CON EL ID DEL DIV)
+    document.getElementById('vendedorSelectionModal').style.display = 'block';
+    
+    // Carga los datos la primera vez o si están vacíos
+    if (vendedoresCachePOS.length === 0) {
+        loadVendedoresForPOS();
+    } else {
+        renderVendedoresForPOS(vendedoresCachePOS);
+    }
+}
+
+function closeVendedorSelectionModal() {
+    document.getElementById('vendedorSelectionModal').style.display = 'none';
+}
+
+    async function loadVendedoresForPOS() {
+        const vendedores = await fetchData('vendedores'); 
+        vendedoresCachePOS = vendedores;
+        renderVendedoresForPOS(vendedores);
+    }
+
+    // Fragmento de código DENTRO de punto_de_venta.html
+function renderVendedoresForPOS(vendedores) {
+    // ... (código para inicializar la tabla)
+    vendedores.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${v.id}</td>
+            <td>${v.nombre}</td>
+            <td style="text-align: center;">
+                <button class="btn-primary" 
+                        onclick="selectVendedorFromModal('${v.nombre.replace(/'/g, "\\'")}', ${v.id})" // <-- ¡AQUÍ ESTÁ LA CLAVE!
+                        style="...">
+                    Seleccionar
+                </button>
+            </td>
+        `;
+        // ...
+    });
+}
+
+function selectVendedorFromModal(name, id) {
+    updateSelectedEntity('vendedor', name, id); // <-- Llama a la función que guarda el estado
+    closeVendedorSelectionModal();
+}
+
+    function selectVendedorFromModal(name, id) {
+        updateSelectedEntity('vendedor', name, id); 
+        closeVendedorSelectionModal();
+    }
+
+    function filterVendedoresPOS() {
+        const filtro = document.getElementById('filtro-vendedor-pos').value.toLowerCase();
+        
+        const vendedoresFiltrados = vendedoresCachePOS.filter(v => 
+            v.nombre.toLowerCase().includes(filtro) || 
+            v.id.toString().includes(filtro) 
+        );
+        renderVendedoresForPOS(vendedoresFiltrados);
+    }
         function openCajaModal(total) {
             document.getElementById('cajaModal').style.display = 'block';
             document.getElementById('pago-efectivo').value = total.toFixed(2);
@@ -695,6 +804,24 @@
             document.getElementById('current-time').textContent = timeStr;
         }
 
+        function openWindow(url) {
+        const width = 1000;
+        const height = 700;
+        const left = (screen.width / 2) - (width / 2);
+        const top = (screen.height / 2) - (height / 2);
+        
+        const newWindow = window.open(
+            url,
+            'CatalogosPOSWindow', 
+            `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
+        );
+
+        if (newWindow) {
+            newWindow.focus();
+        } else {
+            alert('El navegador bloqueó la ventana emergente. Por favor, permítalas.');
+        }
+    }
         // Manejo de atajos de teclado (F-Keys)
         document.addEventListener('keydown', function(event) {
             const tagName = event.target.tagName.toLowerCase();

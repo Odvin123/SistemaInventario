@@ -264,4 +264,71 @@ router.get('/proveedores', verifyToken, async (req, res) => {
     }
 });
 
+
+// GET /api/admin/ventas/reportes — Reporte detallado de ventas
+router.get('/reportes', verifyToken, async (req, res) => {
+    const { inicio, fin } = req.query;
+    const empresaId = req.tenantId;
+
+    if (!empresaId) {
+        return res.status(403).json({ success: false, message: 'Acceso denegado. Solo usuarios de empresa.' });
+    }
+
+    let queryText = `
+        SELECT 
+            v.id,
+            v.folio,
+            v.fecha_venta,
+            v.subtotal,
+            v.impuesto,
+            v.descuento,
+            v.total,
+            v.es_factura,
+            COALESCE(c.nombre, 'Público General') AS cliente_nombre,
+            COALESCE(ven.nombre, 'Mostrador') AS vendedor_nombre,
+            json_agg(
+                json_build_object(
+                    'descripcion', p.descripcion,
+                    'cantidad', dv.cantidad,
+                    'precio_unitario', dv.precio_unitario,
+                    'subtotal', dv.subtotal
+                )
+            ) FILTER (WHERE p.id IS NOT NULL) AS detalles
+        FROM ventas v
+        LEFT JOIN clientes c ON v.cliente_id = c.id
+        LEFT JOIN vendedores ven ON v.vendedor_id = ven.id
+        LEFT JOIN detalle_venta dv ON v.id = dv.venta_id
+        LEFT JOIN productos p ON dv.producto_id = p.id
+        WHERE v.empresa_id = $1
+    `;
+
+    const params = [empresaId];
+    let paramIndex = 2;
+
+    // Filtro opcional por rango de fechas
+    if (inicio && fin) {
+        queryText += ` AND v.fecha_venta::date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+        params.push(inicio, fin);
+        paramIndex += 2;
+    }
+
+    queryText += `
+        GROUP BY v.id, c.nombre, ven.nombre
+        ORDER BY v.fecha_venta DESC
+    `;
+
+    try {
+        const result = await db.query(queryText, params);
+        const ventas = result.rows.map(row => ({
+            ...row,
+            detalles: row.detalles && row.detalles[0] && row.detalles[0].descripcion ? row.detalles : []
+        }));
+
+        res.status(200).json({ success: true, ventas });
+    } catch (error) {
+        console.error('Error al generar reporte de ventas:', error);
+        res.status(500).json({ success: false, message: 'Error interno al generar el reporte.' });
+    }
+});
+
 module.exports = router;

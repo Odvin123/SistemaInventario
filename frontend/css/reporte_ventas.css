@@ -1,0 +1,236 @@
+/* reporte_ventas.css */
+:root {
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --border-color: #dee2e6;
+    --bg-table: #ffffff;
+    --text-color: #212529;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    background-color: #f5f7fa;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-actions {
+    margin-bottom: 20px;
+}
+
+.btn-back {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-back:hover {
+    background-color: #545b62;
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--dark);
+    text-align: center;
+}
+
+/* Filtros */
+.filters-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: end;
+}
+
+.date-filter {
+    flex: 1;
+    min-width: 200px;
+}
+
+.date-filter label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--secondary);
+}
+
+.date-filter input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Tabla */
+.table-container {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: 700;
+    color: var(--dark);
+    position: sticky;
+    top: 0;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.data-table .loading {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Productos en celda */
+.productos-lista {
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    padding: 5px 0;
+}
+
+.producto-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed #eee;
+    padding: 2px 0;
+}
+
+.producto-item:last-child {
+    border-bottom: none;
+}
+
+/* Total */
+.total-section {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    text-align: right;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.total-section h3 {
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filters-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .date-filter {
+        min-width: auto;
+    }
+
+    .filter-actions {
+        justify-content: center;
+    }
+
+    .data-table {
+        font-size: 0.85rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+    }
+}
+
+/* Indicador de factura */
+.factura-yes {
+    color: var(--success);
+    font-weight: bold;
+}
+
+.factura-no {
+    color: var(--secondary);
+}
