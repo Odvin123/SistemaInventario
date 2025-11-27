@@ -3,23 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Punto de Venta - SAAS
-    </title>
+    <title>Punto de Venta - SAAS</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/punto_de_venta.css" />
     <style>
-        /* Estilos específicos para este componente (Solo para referencia) */
         .footer-data[style*="cursor: pointer"] {
-            /* Asegura que visualmente se note que es clickeable */
-            text-decoration: underline; 
-            text-decoration-style: dashed;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+        }
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .pos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pos-table th,
+        .pos-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        .pos-table th {
+            background-color: #f8f9fa;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
-
 <body>
     <main class="pos-window">
-
         <header class="pos-header">
             <div id="company-logo" class="pos-logo">
                 Área para Logo
@@ -93,26 +133,37 @@
         
         <footer class="pos-footer">
             <div class="footer-info">
-    <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
-    
-    <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openClienteSelectionModal()" style="cursor: pointer;">PUBLICO EN GENERAL</span></span> 
-    
-    <span>Vendedor: <span class="footer-data" id="footer-vendedor" ondblclick="openVendedorSelectionModal()" style="cursor: pointer;">MOSTRADOR</span></span>
-</div>
+                <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
+                
+                <span>Cliente: 
+                    <span class="footer-data" id="footer-cliente" 
+                          ondblclick="openClienteSelectionModal()" 
+                          style="cursor: pointer; text-decoration: underline; font-weight: bold;">
+                        PUBLICO EN GENERAL
+                    </span>
+                </span> 
+                
+                <span>Vendedor: 
+                    <span class="footer-data" id="footer-vendedor" 
+                          ondblclick="openVendedorSelectionModal()" 
+                          style="cursor: pointer; text-decoration: underline; font-weight: bold;">
+                        MOSTRADOR
+                    </span>
+                </span>
+            </div>
             <div class="date-time-box">
                 <time id="current-date">--</time>
                 <time id="current-time">--</time>
             </div>
         </footer>
-
     </main>
 
+    <!-- Modal de Producto -->
     <div id="movimientoVentasModal" class="modal" role="dialog" aria-labelledby="movimiento-title" aria-modal="true">
         <div class="modal-content" style="max-width: 700px;">
             <button class="close" aria-label="Cerrar" onclick="closeMovimientoVentasModal()">&times;</button>
             <h3 id="movimiento-title">Agregar Producto a Venta</h3>
             <form id="movimientoVentasForm">
-                
                 <label for="clasificacion">Clasificación:</label>
                 <select id="clasificacion" required onchange="filterProductsByClasificacion()">
                     <option value="TODOS">TODOS</option> 
@@ -141,12 +192,12 @@
                 
                 <input type="hidden" id="selected_product_id">
                 <input type="hidden" id="selected_product_clave">
-
                 <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Añadir a la Venta</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal de Búsqueda de Producto -->
     <div id="busquedaProductoModal" class="modal" role="dialog" aria-labelledby="busqueda-title" aria-modal="true">
         <div class="modal-content" style="max-width: 900px;">
             <button class="close" aria-label="Cerrar" onclick="closeBusquedaProductoModal()">&times;</button>
@@ -173,6 +224,7 @@
         </div>
     </div>
 
+    <!-- Modal de Caja -->
     <div id="cajaModal" class="modal" role="dialog" aria-labelledby="caja-title" aria-modal="true">
         <div class="modal-content" style="max-width: 450px; text-align: center;">
             <button class="close" aria-label="Cerrar caja de cobro" onclick="closeCajaModal()">&times;</button>
@@ -213,6 +265,53 @@
         </div>
     </div>
 
+    <!-- ✅ Modal de Selección de Cliente -->
+    <div id="clienteSelectionModal" class="modal" role="dialog" aria-labelledby="cliente-modal-title" aria-modal="true">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="close" aria-label="Cerrar" onclick="closeClienteSelectionModal()">&times;</button>
+            <h3 id="cliente-modal-title">Seleccionar Cliente</h3>
+            <input type="text" id="filtro-cliente-pos" placeholder="Filtrar por nombre o ID" oninput="filterClientesPOS()" style="width: 100%; margin-bottom: 15px;">
+            
+            <div id="clientes-table-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
+                <table id="clientes-table" class="pos-table" style="width: 100%;" aria-label="Lista de clientes">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientes-tbody">
+                        <tr><td colspan="3" style="text-align: center;">Cargando clientes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Modal de Selección de Vendedor -->
+    <div id="vendedorSelectionModal" class="modal" role="dialog" aria-labelledby="vendedor-modal-title" aria-modal="true">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="close" aria-label="Cerrar" onclick="closeVendedorSelectionModal()">&times;</button>
+            <h3 id="vendedor-modal-title">Seleccionar Vendedor</h3>
+            <input type="text" id="filtro-vendedor-pos" placeholder="Filtrar por nombre o ID" oninput="filterVendedoresPOS()" style="width: 100%; margin-bottom: 15px;">
+            
+            <div id="vendedores-table-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
+                <table id="vendedores-table" class="pos-table" style="width: 100%;" aria-label="Lista de vendedores">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendedores-tbody">
+                        <tr><td colspan="3" style="text-align: center;">Cargando vendedores...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script>
         const API_URL = 'http://localhost:4000/api'; 
@@ -223,11 +322,14 @@
         let productosInventarioCache = []; 
         let categoriasCache = [];
         let proveedoresCache = [];
+        let clientesCachePOS = [];
+        let vendedoresCachePOS = [];
 
         const defaultAdmin = 'ADMINISTRADOR'; 
         const defaultCliente = 'PUBLICO EN GENERAL';
         const defaultVendedor = 'MOSTRADOR';
 
+        // ✅ Función para cargar estado inicial
         function loadState() {
             document.getElementById('footer-administrador').textContent = defaultAdmin; 
 
@@ -238,36 +340,163 @@
             document.getElementById('footer-vendedor').textContent = currentVendedor;
 
             if (!localStorage.getItem('currentClienteId')) localStorage.setItem('currentClienteId', 1);
-        if (!localStorage.getItem('currentVendedorId')) localStorage.setItem('currentVendedorId', 1);
-    }
-        
-
-        function selectClientFromModal(name, id) {
-    updateSelectedEntity('cliente', name, id); // <-- 🔑 Clave 1: Llama a la función central
-    closeClienteSelectionModal();
-}
-
-function selectVendedorFromModal(name, id) {
-    updateSelectedEntity('vendedor', name, id); // <-- 🔑 Clave 1: Llama a la función central
-    closeVendedorSelectionModal();
-}
-window.updateSelectedEntity = function(type, name, id) {
-        if (type === 'cliente') {
-            localStorage.setItem('currentClienteName', name);
-            localStorage.setItem('currentClienteId', id); 
-            document.getElementById('footer-cliente').textContent = name;
-        } else if (type === 'vendedor') {
-            localStorage.setItem('currentVendedorName', name);
-            localStorage.setItem('currentVendedorId', id); 
-            document.getElementById('footer-vendedor').textContent = name;
+            if (!localStorage.getItem('currentVendedorId')) localStorage.setItem('currentVendedorId', 1);
         }
-    }
+
+        // ✅ Funciones para modales de cliente/vendedor
+        function openClienteSelectionModal() {
+            if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; } 
+            document.getElementById('clienteSelectionModal').style.display = 'block';
+            if (clientesCachePOS.length === 0) {
+                loadClientesForPOS();
+            } else {
+                renderClientesForPOS(clientesCachePOS);
+            }
+        }
+
+        function closeClienteSelectionModal() {
+            document.getElementById('clienteSelectionModal').style.display = 'none';
+        }
+
+        function openVendedorSelectionModal() {
+            if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; }
+            document.getElementById('vendedorSelectionModal').style.display = 'block';
+            if (vendedoresCachePOS.length === 0) {
+                loadVendedoresForPOS();
+            } else {
+                renderVendedoresForPOS(vendedoresCachePOS);
+            }
+        }
+
+        function closeVendedorSelectionModal() {
+            document.getElementById('vendedorSelectionModal').style.display = 'none';
+        }
+
+        // ✅ Carga y render de clientes/vendedores
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_URL}/admin/${endpoint}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error(`Error al cargar ${endpoint}:`, error);
+                    return [];
+                }
+                const data = await response.json();
+                return data[endpoint]; 
+            } catch (error) { 
+                console.error(`Error de conexión al cargar ${endpoint}:`, error); 
+                return [];
+            }
+        }
+
+        async function loadClientesForPOS() {
+            const clientes = await fetchData('clientes'); 
+            clientesCachePOS = clientes;
+            renderClientesForPOS(clientes);
+        }
+
+        async function loadVendedoresForPOS() {
+            const vendedores = await fetchData('vendedores'); 
+            vendedoresCachePOS = vendedores;
+            renderVendedoresForPOS(vendedores);
+        }
+
+        function renderClientesForPOS(clientes) {
+            const tbody = document.getElementById('clientes-tbody');
+            tbody.innerHTML = '';
+            
+            if (clientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay clientes registrados.</td></tr>';
+                return;
+            }
+
+            clientes.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.nombre}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-primary" 
+                                onclick="selectClientFromModal('${c.nombre.replace(/'/g, "\\'")}', ${c.id})">Seleccionar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderVendedoresForPOS(vendedores) {
+            const tbody = document.getElementById('vendedores-tbody');
+            tbody.innerHTML = '';
+            
+            if (vendedores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay vendedores registrados.</td></tr>';
+                return;
+            }
+
+            vendedores.forEach(v => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${v.id}</td>
+                    <td>${v.nombre}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-primary" 
+                                onclick="selectVendedorFromModal('${v.nombre.replace(/'/g, "\\'")}', ${v.id})">Seleccionar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterClientesPOS() {
+            const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
+            const clientesFiltrados = clientesCachePOS.filter(c => 
+                c.nombre.toLowerCase().includes(filtro) || 
+                c.id.toString().includes(filtro) 
+            );
+            renderClientesForPOS(clientesFiltrados);
+        }
+
+        function filterVendedoresPOS() {
+            const filtro = document.getElementById('filtro-vendedor-pos').value.toLowerCase();
+            const vendedoresFiltrados = vendedoresCachePOS.filter(v => 
+                v.nombre.toLowerCase().includes(filtro) || 
+                v.id.toString().includes(filtro) 
+            );
+            renderVendedoresForPOS(vendedoresFiltrados);
+        }
+
+        // ✅ Seleccionar y actualizar
+        function selectClientFromModal(name, id) {
+            updateSelectedEntity('cliente', name, id); 
+            closeClienteSelectionModal();
+        }
+
+        function selectVendedorFromModal(name, id) {
+            updateSelectedEntity('vendedor', name, id); 
+            closeVendedorSelectionModal();
+        }
+
+        window.updateSelectedEntity = function(type, name, id) {
+            if (type === 'cliente') {
+                localStorage.setItem('currentClienteName', name);
+                localStorage.setItem('currentClienteId', id); 
+                document.getElementById('footer-cliente').textContent = name;
+            } else if (type === 'vendedor') {
+                localStorage.setItem('currentVendedorName', name);
+                localStorage.setItem('currentVendedorId', id); 
+                document.getElementById('footer-vendedor').textContent = name;
+            }
+        }
+
+        // ✅ Funciones existentes (sin cambios, solo ajuste para ticket)
 
         function openMovimientoVentasModal() {
             if (!token) {
-                  alert('Sesión no válida. Por favor, inicie sesión.');
-                  window.location.href = 'login.html'; 
-                  return;
+                alert('Sesión no válida. Por favor, inicie sesión.');
+                window.location.href = 'login.html'; 
+                return;
             }
             document.getElementById('movimientoVentasModal').style.display = 'block';
             loadCategoriasAndInitBusqueda();
@@ -289,149 +518,23 @@ window.updateSelectedEntity = function(type, name, id) {
         function closeBusquedaProductoModal() {
             document.getElementById('busquedaProductoModal').style.display = 'none';
         }
-        
 
-   function openClienteSelectionModal() {
-    // Es importante verificar el token/sesión aquí
-    if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; } 
-    
-    // Muestra el modal (DEBE COINCIDIR CON EL ID DEL DIV)
-    document.getElementById('clienteSelectionModal').style.display = 'block';
-    
-    // Carga los datos la primera vez o si están vacíos
-    if (clientesCachePOS.length === 0) {
-        loadClientesForPOS();
-    } else {
-        renderClientesForPOS(clientesCachePOS);
-    }
-}
-
-    function closeClienteSelectionModal() {
-        document.getElementById('clienteSelectionModal').style.display = 'none';
-    }
-
-    async function loadClientesForPOS() {
-        const clientes = await fetchData('clientes'); 
-        clientesCachePOS = clientes;
-        renderClientesForPOS(clientes);
-    }
-
-   function renderClientesForPOS(clientes) {
-    // ... (código para inicializar la tabla)
-    clientes.forEach(c => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${c.id}</td>
-            <td>${c.nombre}</td>
-            <td style="text-align: center;">
-                <button class="btn-primary" 
-                        onclick="selectClientFromModal('${c.nombre.replace(/'/g, "\\'")}', ${c.id})" // <-- ¡AQUÍ ESTÁ LA CLAVE!
-                        style="...">
-                    Seleccionar
-                </button>
-            </td>
-        `;
-        
-    });
-}
-
-    function selectClientFromModal(name, id) {
-        updateSelectedEntity('cliente', name, id); 
-        closeClienteSelectionModal();
-    }
-
-    function filterClientesPOS() {
-        const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
-        
-        const clientesFiltrados = clientesCachePOS.filter(c => 
-            c.nombre.toLowerCase().includes(filtro) || 
-            c.id.toString().includes(filtro) 
-        );
-        renderClientesForPOS(clientesFiltrados);
-    }
-
-    function openVendedorSelectionModal() {
-    // Es importante verificar el token/sesión aquí
-    if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; }
-    
-    // Muestra el modal (DEBE COINCIDIR CON EL ID DEL DIV)
-    document.getElementById('vendedorSelectionModal').style.display = 'block';
-    
-    // Carga los datos la primera vez o si están vacíos
-    if (vendedoresCachePOS.length === 0) {
-        loadVendedoresForPOS();
-    } else {
-        renderVendedoresForPOS(vendedoresCachePOS);
-    }
-}
-
-function closeVendedorSelectionModal() {
-    document.getElementById('vendedorSelectionModal').style.display = 'none';
-}
-
-    async function loadVendedoresForPOS() {
-        const vendedores = await fetchData('vendedores'); 
-        vendedoresCachePOS = vendedores;
-        renderVendedoresForPOS(vendedores);
-    }
-
-    // Fragmento de código DENTRO de punto_de_venta.html
-function renderVendedoresForPOS(vendedores) {
-    // ... (código para inicializar la tabla)
-    vendedores.forEach(v => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${v.id}</td>
-            <td>${v.nombre}</td>
-            <td style="text-align: center;">
-                <button class="btn-primary" 
-                        onclick="selectVendedorFromModal('${v.nombre.replace(/'/g, "\\'")}', ${v.id})" // <-- ¡AQUÍ ESTÁ LA CLAVE!
-                        style="...">
-                    Seleccionar
-                </button>
-            </td>
-        `;
-        // ...
-    });
-}
-
-function selectVendedorFromModal(name, id) {
-    updateSelectedEntity('vendedor', name, id); // <-- Llama a la función que guarda el estado
-    closeVendedorSelectionModal();
-}
-
-    function selectVendedorFromModal(name, id) {
-        updateSelectedEntity('vendedor', name, id); 
-        closeVendedorSelectionModal();
-    }
-
-    function filterVendedoresPOS() {
-        const filtro = document.getElementById('filtro-vendedor-pos').value.toLowerCase();
-        
-        const vendedoresFiltrados = vendedoresCachePOS.filter(v => 
-            v.nombre.toLowerCase().includes(filtro) || 
-            v.id.toString().includes(filtro) 
-        );
-        renderVendedoresForPOS(vendedoresFiltrados);
-    }
-        function openCajaModal(total) {
+        function openCajaModal(total, clienteNombre, vendedorNombre) {
             document.getElementById('cajaModal').style.display = 'block';
             document.getElementById('pago-efectivo').value = total.toFixed(2);
-            document.getElementById('pago-tarjeta').value = '0.00';
-            document.getElementById('pago-transferencia').value = '0.00';
-            document.getElementById('pago-credito').value = '0.00';
-            
             document.getElementById('caja-total-a-pagar').textContent = `C$${total.toFixed(2)}`;
-            document.getElementById('total-letras').textContent = '(Monto en letras no implementado)'; 
-            
+            document.getElementById('total-letras').textContent = '(Monto en letras no implementado)';
             calcularCambio();
+
+            // Guardar para el ticket
+            window.currentClienteNombre = clienteNombre;
+            window.currentVendedorNombre = vendedorNombre;
         }
 
         function closeCajaModal() {
             document.getElementById('cajaModal').style.display = 'none';
             document.getElementById('cajaForm').reset();
         }
-
 
         function calcularCambio() {
             const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
@@ -449,116 +552,10 @@ function selectVendedorFromModal(name, id) {
             cambioDisplay.textContent = `C$${cambio.toFixed(2)}`;
             cambioDisplay.style.color = cambio >= 0 ? '#28a745' : '#dc3545';
         }
-        
-        function handleCobrar() {
-            if (ventaActual.length === 0) {
-                alert("No hay productos en la venta para cobrar.");
-                return;
-            }
-            const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
-            const totalVenta = parseFloat(totalVentaStr);
-            
-            openCajaModal(totalVenta);
-        }
-
-        async function finalizarVentaDesdeCaja() {
-            
-            const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
-            const totalVenta = parseFloat(totalVentaStr);
-
-            const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
-            const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
-            const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
-            const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
-            
-            const totalPagado = efectivo + tarjeta + transferencia + credito;
-
-            if (totalPagado < totalVenta) {
-                alert(`¡ERROR! Falta pagar C$${(totalVenta - totalPagado).toFixed(2)}. Complete el pago.`);
-                return;
-            }
-            
-            const pagos = [];
-            if (efectivo > 0) pagos.push({ metodo: 'Efectivo', monto: efectivo });
-            if (tarjeta > 0) pagos.push({ metodo: 'Tarjeta', monto: tarjeta });
-            if (transferencia > 0) pagos.push({ metodo: 'Transferencia', monto: transferencia });
-            if (credito > 0) pagos.push({ metodo: 'Credito', monto: credito });
-
-            if (pagos.length === 0) {
-                alert("Debe ingresar al menos un pago para finalizar la venta.");
-                return;
-            }
-            
-            const btnAceptar = document.querySelector('#cajaModal .btn-add-product');
-            btnAceptar.disabled = true;
-
-            try {
-                const ventaData = {
-                    cliente_id: 1, 
-                    vendedor_id: 1, 
-                    es_factura: document.getElementById('check-factura').checked,
-                    detalles: ventaActual.map(item => ({
-                        producto_id: item.id,
-                        cantidad: item.cantidad,
-                        precio_unitario: item.precio
-                    }))
-                    ,
-                    pagos: pagos 
-                };
-
-                const response = await fetch(`${API_URL}/admin/ventas`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(ventaData)
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    alert(`¡ÉXITO! Venta #${result.folio} registrada. Cambio a devolver: C$${result.cambio}`);
-                    
-                    ventaActual = [];
-                    renderVentaActual();
-                    closeCajaModal();
-                    loadInventarioPDV(); 
-                    
-                } else {
-                    alert('Error al registrar la venta: ' + (result.message || 'Error desconocido del servidor.'));
-                }
-            } catch (error) {
-                alert('Error de conexión o de red al procesar la venta.');
-                console.error('Error en fetch (finalizarVentaDesdeCaja):', error);
-            } finally {
-                btnAceptar.disabled = false; 
-            }
-        }
-
-
 
         async function loadCategoriasAndInitBusqueda() {
             await Promise.all([loadCategoriasPDV(), loadInventarioPDV(), loadProveedoresPDV()]);
             renderClasificaciones();
-        }
-
-        async function fetchData(endpoint) {
-             try {
-                const response = await fetch(`${API_URL}/admin/${endpoint}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) {
-                     const error = await response.json();
-                     console.error(`Error al cargar ${endpoint}:`, error);
-                     return [];
-                }
-                const data = await response.json();
-                return data[`${endpoint}`]; 
-            } catch (error) { 
-                console.error(`Error de conexión al cargar ${endpoint}:`, error); 
-                return [];
-            }
         }
 
         async function loadCategoriasPDV() {
@@ -568,14 +565,13 @@ function selectVendedorFromModal(name, id) {
         async function loadInventarioPDV() {
             productosInventarioCache = await fetchData('productos');
             if (document.getElementById('busquedaProductoModal').style.display === 'block') {
-                 renderBusquedaProductos(productosInventarioCache);
+                renderBusquedaProductos(productosInventarioCache);
             }
         }
 
         async function loadProveedoresPDV() {
             proveedoresCache = await fetchData('proveedores');
         }
-
 
         function renderClasificaciones() {
             const select = document.getElementById('clasificacion');
@@ -644,7 +640,6 @@ function selectVendedorFromModal(name, id) {
             });
         }
 
-
         function selectProductForSale(productId) {
             const producto = productosInventarioCache.find(p => p.id === productId);
             if (!producto) return;
@@ -709,11 +704,9 @@ function selectVendedorFromModal(name, id) {
                 return;
             }
 
-
             addProductToSale(productoData, cantidad, precio);
             closeMovimientoVentasModal();
         });
-
 
         function addProductToSale(producto, cantidad, precio) {
             const importe = cantidad * precio;
@@ -789,8 +782,6 @@ function selectVendedorFromModal(name, id) {
             document.getElementById('cantidad_venta').value = '1';
         }
 
-
-        // Lógica de Fecha y Hora 
         function updateDateTime() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('es-NI', {
@@ -805,75 +796,187 @@ function selectVendedorFromModal(name, id) {
         }
 
         function openWindow(url) {
-        const width = 1000;
-        const height = 700;
-        const left = (screen.width / 2) - (width / 2);
-        const top = (screen.height / 2) - (height / 2);
-        
-        const newWindow = window.open(
-            url,
-            'CatalogosPOSWindow', 
-            `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
-        );
+            const width = 1000;
+            const height = 700;
+            const left = (screen.width / 2) - (width / 2);
+            const top = (screen.height / 2) - (height / 2);
+            
+            const newWindow = window.open(
+                url,
+                'CatalogosPOSWindow', 
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
+            );
 
-        if (newWindow) {
-            newWindow.focus();
-        } else {
-            alert('El navegador bloqueó la ventana emergente. Por favor, permítalas.');
+            if (newWindow) {
+                newWindow.focus();
+            } else {
+                alert('El navegador bloqueó la ventana emergente. Por favor, permítalas.');
+            }
         }
-    }
-        // Manejo de atajos de teclado (F-Keys)
+
+        // ✅ Manejo de cobro y ticket
+        function handleCobrar() {
+            if (ventaActual.length === 0) {
+                alert("No hay productos en la venta para cobrar.");
+                return;
+            }
+
+            const clienteActualNombre = localStorage.getItem('currentClienteName') || 'PUBLICO EN GENERAL';
+            const vendedorActualNombre = localStorage.getItem('currentVendedorName') || 'MOSTRADOR';
+
+            const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+            const totalVenta = parseFloat(totalVentaStr);
+
+            openCajaModal(totalVenta, clienteActualNombre, vendedorActualNombre);
+        }
+
+        async function finalizarVentaDesdeCaja() {
+            const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+            const totalVenta = parseFloat(totalVentaStr);
+
+            const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
+            const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
+            const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
+            const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+            
+            const totalPagado = efectivo + tarjeta + transferencia + credito;
+
+            if (totalPagado < totalVenta) {
+                alert(`¡ERROR! Falta pagar C$${(totalVenta - totalPagado).toFixed(2)}. Complete el pago.`);
+                return;
+            }
+            
+            const pagos = [];
+            if (efectivo > 0) pagos.push({ metodo: 'Efectivo', monto: efectivo });
+            if (tarjeta > 0) pagos.push({ metodo: 'Tarjeta', monto: tarjeta });
+            if (transferencia > 0) pagos.push({ metodo: 'Transferencia', monto: transferencia });
+            if (credito > 0) pagos.push({ metodo: 'Credito', monto: credito });
+
+            if (pagos.length === 0) {
+                alert("Debe ingresar al menos un pago para finalizar la venta.");
+                return;
+            }
+            
+            const btnAceptar = document.querySelector('#cajaModal .btn-add-product');
+            btnAceptar.disabled = true;
+
+            try {
+                const ventaData = {
+                    cliente_id: parseInt(localStorage.getItem('currentClienteId')) || 1, 
+                    vendedor_id: parseInt(localStorage.getItem('currentVendedorId')) || 1, 
+                    es_factura: document.getElementById('check-factura').checked,
+                    detalles: ventaActual.map(item => ({
+                        producto_id: item.id,
+                        cantidad: item.cantidad,
+                        precio_unitario: item.precio
+                    })),
+                    pagos: pagos 
+                };
+
+                const response = await fetch(`${API_URL}/admin/ventas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(ventaData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert(`¡ÉXITO! Venta #${result.folio} registrada. Cambio a devolver: C$${result.cambio}`);
+
+                    // ✅ GENERAR TICKET AUTOMÁTICAMENTE
+                    const clienteActualNombre = window.currentClienteNombre || 'PUBLICO EN GENERAL';
+                    const vendedorActualNombre = window.currentVendedorNombre || 'MOSTRADOR';
+
+                    generateTicket(
+                        result.folio,
+                        ventaActual,
+                        totalVenta,
+                        clienteActualNombre,
+                        vendedorActualNombre,
+                        result.cambio
+                    );
+
+                    ventaActual = [];
+                    renderVentaActual();
+                    closeCajaModal();
+                    loadInventarioPDV(); 
+                    
+                } else {
+                    alert('Error al registrar la venta: ' + (result.message || 'Error desconocido del servidor.'));
+                }
+            } catch (error) {
+                alert('Error de conexión o de red al procesar la venta.');
+                console.error('Error en fetch (finalizarVentaDesdeCaja):', error);
+            } finally {
+                btnAceptar.disabled = false; 
+            }
+        }
+
+       
+
+        // Atajos de teclado
         document.addEventListener('keydown', function(event) {
             const tagName = event.target.tagName.toLowerCase();
             const isInput = (tagName === 'input' || tagName === 'textarea');
             
-            // F2: Vendedores
             if (event.code === 'F2' && !isInput) {
                 event.preventDefault(); 
                 openWindow('vendedores.html');
-            } 
-            // F3: Clientes
-            else if (event.code === 'F3' && !isInput) {
+            } else if (event.code === 'F3' && !isInput) {
                 event.preventDefault(); 
                 openWindow('clientes.html');
-            }
-            // F6: Corte caja
-            else if (event.code === 'F6' && !isInput) {
+            } else if (event.code === 'F6' && !isInput) {
                 event.preventDefault(); 
                 handleCorteCaja(); 
-            }
-            // F7: Borrar Venta (solo en la ventana principal y si no está en input)
-            else if (event.code === 'F7' && !isInput && document.getElementById('cajaModal').style.display !== 'block' && ventaActual.length > 0) {
-                 event.preventDefault();
-                 clearSale();
-            }
-            // F8: Cobrar
-            else if (event.code === 'F8' && !isInput && document.getElementById('cajaModal').style.display !== 'block') {
-                 event.preventDefault();
-                 handleCobrar();
-            }
-            // F9: Cancelar NV
-            else if (event.code === 'F9' && !isInput) {
-                 event.preventDefault();
-                 handleCancelarNV(); 
-            }
-            // Supr: Eliminar último producto (solo en la ventana principal y si no está en input)
-            else if (event.key === 'Delete' && !isInput && document.getElementById('cajaModal').style.display !== 'block') {
-                 event.preventDefault();
-                 removeItemFromSale();
-            }
-            // Enter en el campo de código para abrir modal de búsqueda (si está visible y enfocado)
-            else if (event.code === 'Enter' && event.target.id === 'barcode-input' && document.getElementById('movimientoVentasModal').style.display !== 'block') {
-                 event.preventDefault();
-                 openMovimientoVentasModal();
+            } else if (event.code === 'F7' && !isInput && ventaActual.length > 0) {
+                event.preventDefault();
+                clearSale();
+            } else if (event.code === 'F8' && !isInput) {
+                event.preventDefault();
+                handleCobrar();
+            } else if (event.code === 'F9' && !isInput) {
+                event.preventDefault();
+                handleCancelarNV(); 
+            } else if (event.key === 'Delete' && !isInput) {
+                event.preventDefault();
+                removeItemFromSale();
+            } else if (event.code === 'Enter' && event.target.id === 'barcode-input') {
+                event.preventDefault(); 
+                openMovimientoVentasModal(); 
             }
         });
 
+        // ✅ Nueva función: genera ticket en ventana nueva SIN document.write
+function generateTicket(folio, productos, total, clienteNombre, vendedorNombre, cambio) {
+    const now = new Date();
+    const fechaHora = now.toLocaleString('es-NI');
 
+    const ticketData = {
+        folio,
+        fechaHora,
+        clienteNombre,
+        vendedorNombre,
+        productos,
+        total,
+        cambio
+    };
+
+    sessionStorage.setItem('ticketData', JSON.stringify(ticketData));
+
+    const ticketWindow = window.open('ticket.html', '_blank', 'width=350,height=600,resizable,scrollbars');
+    
+    if (!ticketWindow) {
+        alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para imprimir el ticket.');
+    }
+}       // ✅ Inicialización
         document.addEventListener('DOMContentLoaded', async () => {
             loadState();
             const nombreEmpresa = tenantId ? tenantId.toUpperCase() : "TU EMPRESA COMERCIAL"; 
-            document.getElementById('company-name').textContent = nombreEmpresa;  
+            document.getElementById('company-name').textContent = nombreEmpresa; 
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
@@ -889,12 +992,29 @@ function selectVendedorFromModal(name, id) {
             
             const cobrarBtn = document.querySelector('.cobrar-btn');
             if(cobrarBtn) {
-                 cobrarBtn.removeEventListener('click', handleCobrar); 
-                 cobrarBtn.addEventListener('click', handleCobrar);
+                cobrarBtn.removeEventListener('click', handleCobrar); 
+                cobrarBtn.addEventListener('click', handleCobrar);
             }
             
+            document.getElementById('proveedorForm')?.addEventListener('submit', saveProveedor);
+            document.getElementById('categoriaForm')?.addEventListener('submit', saveCategoria); 
+            document.getElementById('productForm')?.addEventListener('submit', saveProduct); 
+
             await loadCategoriasAndInitBusqueda();
         });
+
+        // Funciones placeholder (para evitar errores si se llaman)
+        function handleCorteCaja() { alert('Función de corte de caja no implementada.'); }
+        function handleCancelarNV() { 
+            if (confirm("¿Cancelar venta actual?")) {
+                ventaActual = [];
+                renderVentaActual();
+            }
+        }
+        function saveProveedor() {}
+        function saveCategoria() {}
+        function saveProduct() {}
+
     </script>
 </body>
 </html>
