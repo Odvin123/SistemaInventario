@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrada de Inventario | InvenSaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/entrada_inventario.css">
+    <link rel="stylesheet" href="css/StyleLogin.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.history.back()">
+                ⬅️ Volver al Panel Principal
+            </button>
+        </div>
+
+        <h1>Registrar Entrada de Inventario</h1>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="referencia">Referencia (ej: OC-2025-001):</label>
+                <input type="text" id="referencia" placeholder="Opcional">
+            </div>
+            <div class="form-group">
+                <label for="motivo">Motivo / Notas:</label>
+                <textarea id="motivo" rows="2" placeholder="Opcional"></textarea>
+            </div>
+
+            <button class="btn-add-product" onclick="addProductoRow()">➕ Añadir Producto</button>
+
+            <table id="productos-table" class="data-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="productos-tbody">
+                    <tr><td colspan="3" style="text-align: center;">Haz clic en "➕ Añadir Producto"</td></tr>
+                </tbody>
+            </table>
+
+            <button class="btn-primary" id="btn-guardar">Registrar Entrada</button>
+        </div>
+    </div>
+
+    <!-- Modal de búsqueda de productos -->
+    <div id="busquedaModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeBusquedaModal()">&times;</span>
+            <h3>Seleccionar Producto</h3>
+            <input type="text" id="filtro-producto" placeholder="Buscar por nombre o clave" oninput="filterProductos()">
+            <table id="tabla-busqueda" class="data-table">
+                <thead>
+                    <tr><th>Clave</th><th>Descripción</th><th>Stock</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="busqueda-tbody">
+                    <tr><td colspan="4" style="text-align: center;">Cargando productos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/entrada_inventario.js"></script>
+</body>
+</html>

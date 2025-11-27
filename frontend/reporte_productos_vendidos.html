@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Productos Vendidos | InvenSaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/reporte_productos_vendidos.css">
+    <link rel="stylesheet" href="css/StyleLogin.css"> <!-- Para botones comunes -->
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.history.back()">
+                ⬅️ Volver al Panel Principal
+            </button>
+        </div>
+
+        <h1>Reporte de Productos Vendidos</h1>
+
+        <!-- Barra de Acciones -->
+        <div class="action-bar">
+            <button class="btn-print" id="btn-imprimir">Imprimir</button>
+            <button class="btn-export" id="btn-exportar">Exportar a Excel</button>
+            <div class="date-filters">
+                <label for="fecha-inicio">Fecha Inicial:</label>
+                <input type="date" id="fecha-inicio">
+                
+                <label for="fecha-fin">Fecha Final:</label>
+                <input type="date" id="fecha-fin">
+                
+                <button class="btn-execute" id="btn-ejecutar">Ejecutar</button>
+                <button class="btn-refresh" id="btn-recargar">Recargar</button>
+            </div>
+        </div>
+
+        <!-- Tabla de Productos Vendidos -->
+        <div class="table-container">
+            <table id="productos-vendidos-table" class="data-table">
+                <thead>
+                    <tr>
+                        <th>FECHA</th>
+                        <th>CLAVE</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th>CANTIDAD</th>
+                        <th>VENTA</th>
+                        <th>PRECIO</th>
+                        <th>COSTO</th>
+                        <th>RECUPERACIÓN</th>
+                        <th>GANANCIA</th>
+                    </tr>
+                </thead>
+                <tbody id="productos-tbody">
+                    <tr><td colspan="9" class="loading">Cargando productos vendidos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totales Inferiores -->
+        <div class="totals-footer">
+            <div class="total-item">
+                <strong>VENTA TOTAL:</strong> <span id="venta-total">C$0.00</span>
+            </div>
+            <div class="total-item">
+                <strong>RECUPERACIÓN:</strong> <span id="recuperacion-total">C$0.00</span>
+            </div>
+            <div class="total-item">
+                <strong>GANANCIA:</strong> <span id="ganancia-total" style="color: green;">C$0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/reporte_productos_vendidos.js"></script>
+</body>
+</html>

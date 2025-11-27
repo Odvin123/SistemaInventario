@@ -331,4 +331,48 @@ router.get('/reportes', verifyToken, async (req, res) => {
     }
 });
 
+// GET /api/admin/ventas/productos-vendidos — Productos vendidos con costo y ganancia
+router.get('/productos-vendidos', verifyToken, async (req, res) => {
+    const { inicio, fin } = req.query;
+    const empresaId = req.tenantId;
+
+    if (!empresaId) {
+        return res.status(403).json({ success: false, message: 'Acceso denegado.' });
+    }
+
+    let queryText = `
+        SELECT 
+            v.fecha_venta,
+            p.id AS clave,
+            p.descripcion,
+            dv.cantidad,
+            dv.subtotal AS venta,
+            dv.precio_unitario,
+            dv.costo_unitario * dv.cantidad AS costo
+        FROM ventas v
+        INNER JOIN detalle_venta dv ON v.id = dv.venta_id
+        INNER JOIN productos p ON dv.producto_id = p.id
+        WHERE v.empresa_id = $1
+    `;
+
+    const params = [empresaId];
+    let paramIndex = 2;
+
+    if (inicio && fin) {
+        queryText += ` AND v.fecha_venta::date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+        params.push(inicio, fin);
+        paramIndex += 2;
+    }
+
+    queryText += ` ORDER BY v.fecha_venta DESC`;
+
+    try {
+        const result = await db.query(queryText, params);
+        res.status(200).json({ success: true, productos: result.rows });
+    } catch (error) {
+        console.error('Error en reporte productos vendidos:', error);
+        res.status(500).json({ success: false, message: 'Error al generar el reporte.' });
+    }
+});
+
 module.exports = router;
