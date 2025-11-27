@@ -22,36 +22,42 @@
                 </div>
             </div>
             
-            <nav class="top-menu">
-        <div class="menu-left">
-            <a href="#" class="menu-item">Archivo</a>
-            
-            <div class="dropdown">
-                <a href="#" class="menu-item active">Catálogos</a>
-                <div class="dropdown-content">
-                    <div class="dropdown-nested">
-                        <a href="#" class="menu-item-nested">Productos ></a> 
-                        <div class="dropdown-content">
-                            <a href="#" onclick="showView('categorias-view')">Categorías</a> 
-                            <a href="#" onclick="showView('inventario-view'); openProductModal();">Registrar Producto</a> 
-                        </div>
-                    </div>
-                    <a href="#" onclick="showView('proveedores-view')">Proveedores</a>
-                    <a href="clientes.html">Clientes</a>
-                    <a href="vendedores.html">Vendedores</a>      
-                 
-                </div>
-            </div>
-
-            <a href="punto_de_venta.html" class="menu-item">Punto de Venta</a>
-            <a href="#" class="menu-item">Reportes</a>
-            <a href="#" class="menu-item">Configuración</a>
-            <a href="#" class="menu-item">Mantenimiento</a>
-            <a href="#" class="menu-item">Acerca</a>
-        </div>
+         <nav class="top-menu">
+    <div class="menu-left">
+        <a href="#" class="menu-item">Archivo</a>
         
-        <a href="#" class="menu-item logout-link" onclick="logout()">Cerrar Sesión 🔒</a>
-    </nav>
+        <div class="dropdown">
+            <a href="#" class="menu-item active">Catálogos</a>
+            <div class="dropdown-content">
+                <div class="dropdown-nested">
+                    <a href="#" class="menu-item-nested">Productos ></a> 
+                    <div class="dropdown-content">
+                        <a href="#" onclick="showView('categorias-view')">Categorías</a> 
+                        <a href="#" onclick="showView('inventario-view'); openProductModal();">Registrar Producto</a> 
+                    </div>
+                </div>
+                <a href="#" onclick="showView('proveedores-view')">Proveedores</a>
+                <a href="clientes.html">Clientes</a>
+                <a href="vendedores.html">Vendedores</a>      
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <a href="#" class="menu-item">Reportes</a>
+            <div class="dropdown-content">
+                <a href="#" onclick="alert('Cargar Reporte de Ventas')">Ventas</a>
+                <a href="#" onclick="alert('Cargar Reporte de Inventario')">Inventario</a>
+                <a href="#" onclick="alert('Cargar Reporte General')">General</a>
+            </div>
+        </div>
+        <a href="punto_de_venta.html" class="menu-item">Punto de Venta</a>
+        <a href="#" class="menu-item">Configuración</a>
+        <a href="#" class="menu-item">Mantenimiento</a>
+        <a href="#" class="menu-item">Acerca</a>
+    </div>
+    
+    <a href="#" class="menu-item logout-link" onclick="logout()">Cerrar Sesión 🔒</a>
+</nav>
             
             <div class="container main-content">
                 <div class="inventory-section">
