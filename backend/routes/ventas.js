@@ -1,11 +1,13 @@
- const express = require('express');
+const express = require('express');
 const router = express.Router();
 const db = require('../db'); 
 const { verifyToken, checkRole } = require('../middleware/auth'); 
 
+
 router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async (req, res) => {
     
     const client = await db.getClient(); 
+    
     
     const { cliente_id = 1, vendedor_id = 1, es_factura, detalles, pagos } = req.body;
     
@@ -16,8 +18,9 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
     }
 
     try {
-        await client.query('BEGIN'); 
-        
+        await client.query('BEGIN');
+
+  
         const folioResult = await client.query(
             'SELECT ultimo_folio FROM control_folios WHERE empresa_id = $1 FOR UPDATE',
             [empresa_id]
@@ -36,34 +39,50 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         let totalVentaCalculado = 0;
         let subtotalVenta = 0;
         const impuesto = 0; 
+        const descuento = 0; 
 
+        const detallesCompletos = [];
+
+        
         for (const detalle of detalles) {
             const { producto_id, cantidad } = detalle;
             let { precio_unitario } = detalle;
             
             const productoResult = await client.query(
-                'SELECT stock, precio FROM productos WHERE id = $1',
-                [producto_id]
+                'SELECT stock, precio, costo FROM productos WHERE id = $1 AND empresa_id = $2 FOR UPDATE',
+                [producto_id, empresa_id]
             );
 
             if (productoResult.rows.length === 0) {
-                throw new Error(`Producto ID ${producto_id} no encontrado.`);
+                throw new Error(`Producto ID ${producto_id} no encontrado en la empresa.`);
             }
 
             const stockActual = productoResult.rows[0].stock;
             const precioActualBD = parseFloat(productoResult.rows[0].precio);
-            precio_unitario = precio_unitario || precioActualBD; 
+            const costoActualBD = parseFloat(productoResult.rows[0].costo);
+
+            precio_unitario = parseFloat(precio_unitario) || precioActualBD; 
 
             if (stockActual < cantidad) {
                 throw new Error(`Stock insuficiente para Producto ID ${producto_id}. Stock: ${stockActual}, solicitado: ${cantidad}.`);
             }
             
-            subtotalVenta += cantidad * precio_unitario;
+            // Acumular totales
+            const subtotalDetalle = cantidad * precio_unitario;
+            subtotalVenta += subtotalDetalle;
+            
+            detallesCompletos.push({ 
+                ...detalle, 
+                precio_unitario: precio_unitario,
+                costo_unitario: costoActualBD, 
+                subtotal: subtotalDetalle 
+            });
         }
         
-        totalVentaCalculado = subtotalVenta + impuesto;
+        totalVentaCalculado = subtotalVenta + impuesto - descuento;
+
+      
         let totalPagado = 0;
-        
         for (const pago of pagos) {
             totalPagado += parseFloat(pago.monto);
         }
@@ -75,29 +94,41 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         const cambio = totalPagado - totalVentaCalculado;
 
         const ventaInsertQuery = `
-            INSERT INTO ventas (empresa_id, folio, total, subtotal, impuesto, es_factura, cliente_id, vendedor_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO ventas (empresa_id, folio, subtotal, impuesto, descuento, total, es_factura, cliente_id, vendedor_id, usuario_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING id;
         `;
         const ventaResult = await client.query(ventaInsertQuery, [
-            empresa_id, nuevoFolio, totalVentaCalculado, subtotalVenta, impuesto, es_factura, cliente_id, vendedor_id
+            empresa_id, 
+            nuevoFolio, 
+            subtotalVenta, 
+            impuesto, 
+            descuento, 
+            totalVentaCalculado, 
+            es_factura, 
+            cliente_id, 
+            vendedor_id, 
+            req.usuario.id // ID del usuario autenticado
         ]);
         const venta_id = ventaResult.rows[0].id;
 
-        for (const detalle of detalles) {
-            const { producto_id, cantidad, precio_unitario } = detalle;
-            const subtotalDetalle = cantidad * precio_unitario;
-
+        // ------------------------------------
+        // 5. INSERCIÓN DE DETALLE Y ACTUALIZACIÓN DE STOCK
+        // ------------------------------------
+        for (const detalle of detallesCompletos) {
+            
             await client.query(
-                'INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal) VALUES ($1, $2, $3, $4, $5)',
-                [venta_id, producto_id, cantidad, precio_unitario, subtotalDetalle]
+                'INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, costo_unitario, subtotal) VALUES ($1, $2, $3, $4, $5, $6)',
+                [venta_id, detalle.producto_id, detalle.cantidad, detalle.precio_unitario, detalle.costo_unitario, detalle.subtotal]
             );
 
+            // Actualizar stock
             await client.query(
                 'UPDATE productos SET stock = stock - $1 WHERE id = $2',
-                [cantidad, producto_id]
+                [detalle.cantidad, detalle.producto_id]
             );
         }
+        
         
         for (const pago of pagos) {
             await client.query(
@@ -122,6 +153,114 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         
     } finally {
         client.release();
+    }
+});
+
+
+
+
+router.get('/folio_actual', verifyToken, async (req, res) => {
+    const empresa_id = req.usuario.empresa_id;
+    if (!empresa_id) {
+        return res.status(401).json({ success: false, message: 'ID de empresa no encontrado.' });
+    }
+
+    let client;
+    try {
+        client = await db.getClient();
+        
+        const folioResult = await client.query(
+            'SELECT ultimo_folio FROM control_folios WHERE empresa_id = $1',
+            [empresa_id]
+        );
+        
+        let folioActual;
+        if (folioResult.rows.length === 0) {
+            folioActual = 1;
+        } else {
+            folioActual = folioResult.rows[0].ultimo_folio + 1;
+        }
+
+        res.json({ success: true, folio: folioActual });
+
+    } catch (error) {
+        console.error('Error al obtener el folio actual:', error.message);
+        res.status(500).json({ success: false, message: 'Error interno del servidor al obtener el folio.' });
+    } finally {
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+
+//Productos
+
+router.get('/productos', verifyToken, async (req, res) => {
+    const empresa_id = req.usuario.empresa_id;
+    if (!empresa_id) {
+        return res.status(401).json({ success: false, message: 'ID de empresa no encontrado.' });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                p.id, 
+                p.clave_producto, 
+                p.descripcion, 
+                p.stock, 
+                p.precio,
+                p.categoria_id, 
+                p.proveedor_id,
+                c.nombre AS nombre_categoria,
+                pr.nombre AS nombre_proveedor
+            FROM productos p
+            JOIN categorias c ON p.categoria_id = c.id
+            JOIN proveedores pr ON p.proveedor_id = pr.id
+            WHERE p.empresa_id = $1
+            ORDER BY p.descripcion;
+        `;
+        const result = await db.query(query, [empresa_id]);
+
+        res.json({ success: true, productos: result.rows });
+    } catch (error) {
+        console.error('Error al obtener productos para PDV:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener la lista de productos.' });
+    }
+});
+
+
+// Categorias 
+
+router.get('/categorias', verifyToken, async (req, res) => {
+    const empresa_id = req.usuario.empresa_id;
+
+    try {
+        const query = `
+            SELECT id, nombre FROM categorias WHERE empresa_id = $1 ORDER BY nombre;
+        `;
+        const result = await db.query(query, [empresa_id]);
+        res.json({ success: true, categorias: result.rows });
+    } catch (error) {
+        console.error('Error al obtener categorías:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener la lista de categorías.' });
+    }
+});
+
+
+
+router.get('/proveedores', verifyToken, async (req, res) => {
+    const empresa_id = req.usuario.empresa_id;
+
+    try {
+        const query = `
+            SELECT id, nombre FROM proveedores WHERE empresa_id = $1 ORDER BY nombre;
+        `;
+        const result = await db.query(query, [empresa_id]);
+        res.json({ success: true, proveedores: result.rows });
+    } catch (error) {
+        console.error('Error al obtener proveedores:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener la lista de proveedores.' });
     }
 });
 

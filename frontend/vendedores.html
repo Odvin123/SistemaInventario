@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Vendedores</title>
+    <link rel="stylesheet" href="css/vendedores.css" /> 
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.location.href='inventario_dashboard.html'">
+                ⬅️ Volver al Panel Principal
+            </button>
+        </div>
+
+        <h1>Gestión de Vendedores</h1>
+
+        <div class="table-header">
+            <button class="btn-add" onclick="openVendedorModal()">
+                ➕ Agregar Nuevo Vendedor
+            </button>
+        </div>
+
+        <table id="vendedores-table" class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Vendedor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="vendedores-tbody">
+                <tr><td colspan="3" style="text-align: center;">Cargando vendedores...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="vendedorModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeVendedorModal()">&times;</span>
+            <h3 id="vendedor-modal-title">Agregar Nuevo Vendedor</h3>
+            <form id="vendedorForm" onsubmit="saveVendedor(event)">
+                <input type="hidden" id="vendedor-id"> 
+                <label for="vendedor_nombre">Nombre del Vendedor:</label>
+                <input type="text" id="vendedor_nombre" required>
+                <button type="submit" class="btn-primary">Guardar Vendedor</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/vendedores.js"></script> 
+
+
+</body>
+</html>

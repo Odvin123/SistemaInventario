@@ -26,8 +26,8 @@
         </div>
 
         <div class="quick-menu">
-            <button class="menu-btn">Vendedores (F2)</button>
-            <button class="menu-btn">Clientes (F3)</button>
+            <button class="menu-btn" onclick="openWindow('vendedores.html')">Vendedores (F2)</button>
+            <button class="menu-btn" onclick="openWindow('clientes.html')">Clientes (F3)</button>
             <button class="menu-btn">Corte caja (F6)</button>
             <button class="menu-btn">Cancelar NV (F9)</button>
         </div>
@@ -80,9 +80,9 @@
 
         <div class="pos-footer">
             <div class="footer-info">
-                <span>Le atiende: <span class="footer-data">ADMINISTRADOR</span></span>
-                <span>Cliente: <span class="footer-data">PUBLICO EN GENERAL</span></span>
-                <span>Vendedor: <span class="footer-data">MOSTRADOR</span></span>
+                <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
+                 <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openClienteSelectionModal()" style="cursor: pointer;">PUBLICO EN GENERAL</span></span>     
+                 <span>Vendedor: <span class="footer-data" id="footer-vendedor">MOSTRADOR</span></span>
             </div>
             <div class="date-time-box">
                 <span id="current-date">--</span>
@@ -210,8 +210,118 @@
     let categoriasCache = [];
     let proveedoresCache = [];
 
-    
+    const defaultAdmin = 'ADMINISTRADOR'; 
+    const defaultCliente = 'PUBLICO EN GENERAL';
+    const defaultVendedor = 'MOSTRADOR';
 
+    function loadState() {
+        document.getElementById('footer-administrador').textContent = defaultAdmin; 
+
+        const currentCliente = localStorage.getItem('currentClienteName') || defaultCliente;
+        const currentVendedor = localStorage.getItem('currentVendedorName') || defaultVendedor;
+
+        document.getElementById('footer-cliente').textContent = currentCliente;
+        document.getElementById('footer-vendedor').textContent = currentVendedor;
+    }
+window.updateSelectedEntity = function(type, name) {
+        if (type === 'cliente') {
+            localStorage.setItem('currentClienteName', name);
+            document.getElementById('footer-cliente').textContent = name;
+            // Aquí podrías guardar el ID real del cliente en otra variable o localStorage
+        } else if (type === 'vendedor') {
+            localStorage.setItem('currentVendedorName', name);
+            document.getElementById('footer-vendedor').textContent = name;
+        }
+    }
+
+    // Dentro de tu <script> en punto_de_venta.html
+
+let clientesCachePOS = []; // Para almacenar clientes si no quieres recargarlos
+
+// --- NUEVO MODAL DE SELECCIÓN DE CLIENTE ---
+function openClienteSelectionModal() {
+    if (!token) {
+          alert('Sesión no válida. Por favor, inicie sesión.');
+          return;
+    }
+    document.getElementById('clienteSelectionModal').style.display = 'block';
+
+    // 1. Cargar la data de clientes aquí si no está cargada
+    if (clientesCachePOS.length === 0) {
+        loadClientesForPOS();
+    } else {
+        renderClientesForPOS(clientesCachePOS);
+    }
+}
+
+function closeClienteSelectionModal() {
+    document.getElementById('clienteSelectionModal').style.display = 'none';
+}
+
+// --- Lógica de Carga y Renderizado ---
+async function loadClientesForPOS() {
+    // Reutiliza la lógica de fetch de tu función 'fetchData'
+    const clientes = await fetchData('clientes'); 
+    clientesCachePOS = clientes;
+    renderClientesForPOS(clientes);
+}
+
+function renderClientesForPOS(clientes) {
+    const tbody = document.getElementById('pos-clientes-tbody');
+    tbody.innerHTML = ''; 
+
+    clientes.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.nombre}</td>
+            <td style="text-align: center;">
+                <button class="btn-primary" 
+                        onclick="selectClientFromModal('${c.nombre.replace(/'/g, "\\'")}', ${c.id})">
+                    Seleccionar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function selectClientFromModal(name, id) {
+    // La función que ya existe en el padre
+    updateSelectedEntity('cliente', name);
+    localStorage.setItem('currentClienteId', id); 
+    closeClienteSelectionModal();
+}
+
+// --- Filtrado (Opcional, pero recomendado) ---
+function filterClientesPOS() {
+    const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
+
+    const clientesFiltrados = clientesCachePOS.filter(c => 
+        c.nombre.toLowerCase().includes(filtro) || 
+        c.id.toString().includes(filtro) 
+    );
+    renderClientesForPOS(clientesFiltrados);
+}
+    
+    function openWindow(url) {
+        const width = 1000;
+        const height = 700;
+        const left = (screen.width / 2) - (width / 2);
+        const top = (screen.height / 2) - (height / 2);
+        
+        const newWindow = window.open(
+            url,
+            'SeleccionPOSWindow', 
+            `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
+        );
+
+        if (newWindow) {
+            newWindow.focus();
+        } else {
+            alert('El navegador bloqueó la ventana emergente. Por favor, permítalas.');
+        }
+    }
     function openMovimientoVentasModal() {
         if (!token) {
               alert('Sesión no válida. Por favor, inicie sesión.');
@@ -628,8 +738,19 @@
         document.getElementById('current-time').textContent = timeStr;
     }
 
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'F2') {
+            event.preventDefault(); 
+            openWindow('vendedores.html');
+        } 
+        else if (event.code === 'F3') {
+            event.preventDefault(); 
+            openWindow('clientes.html');
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', async () => {
-        
+        loadState();
         const nombreEmpresa = tenantId ? tenantId.toUpperCase() : "TU EMPRESA COMERCIAL";
         document.getElementById('company-name').textContent = nombreEmpresa;  
         updateDateTime();

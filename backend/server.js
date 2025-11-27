@@ -19,7 +19,8 @@ const proveedoresRouter = require('./routes/proveedores');
 const categoriasRouter = require('./routes/Categorias');
 const productosRouter = require('./routes/productos');
 const ventasRouter = require('./routes/ventas');
-
+const clientesRouter = require('./routes/clientes'); 
+const vendedoresRouter = require('./routes/vendedores'); 
 
 // Configuración del servicio de correo
 const transporter = nodemailer.createTransport({
@@ -68,6 +69,8 @@ app.use('/api/admin/proveedores', verifyToken, setTenant, proveedoresRouter);
 app.use('/api/admin/categorias', verifyToken, setTenant, categoriasRouter);
 app.use('/api/admin/productos', verifyToken, setTenant, productosRouter);
 app.use('/api/admin/ventas', verifyToken, setTenant, ventasRouter);
+app.use('/api/admin/clientes', verifyToken, setTenant, clientesRouter); 
+app.use('/api/admin/vendedores', verifyToken, setTenant, vendedoresRouter);
 
 
 // Evitar Duplicados de Tenant ID

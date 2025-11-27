@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes</title>
+    <link rel="stylesheet" href="css/clientes.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.location.href='inventario_dashboard.html'">
+                ⬅️ Volver al Panel Principal
+            </button>
+        </div>
+
+        <h1>Gestión de Clientes</h1>
+
+        <div class="table-header">
+            <button class="btn-add" onclick="openClienteModal()">
+                ➕ Agregar Nuevo Cliente
+            </button>
+        </div>
+
+        <table id="clientes-table" class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Cliente</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="clientes-tbody">
+                <tr><td colspan="3" style="text-align: center;">Cargando clientes...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="clienteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeClienteModal()">&times;</span>
+            <h3 id="cliente-modal-title">Agregar Nuevo Cliente</h3>
+            <form id="clienteForm" onsubmit="saveCliente(event)">
+                <input type="hidden" id="cliente-id"> 
+                <label for="cliente_nombre">Nombre del Cliente:</label>
+                <input type="text" id="cliente_nombre" required>
+                <button type="submit" class="btn-primary">Guardar Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/clientes.js"></script> 
+
+    
+</body>
+</html>
