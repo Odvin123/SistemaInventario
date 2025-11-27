@@ -3,14 +3,13 @@ const router = express.Router();
 const db = require('../db'); 
 const { verifyToken, checkRole } = require('../middleware/auth'); 
 
-
+// ==================================================================================
+// 1. REGISTRO DE VENTA (con transacción ACID + registro de SALIDAS en movimientos_inventario)
+// ==================================================================================
 router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async (req, res) => {
-    
     const client = await db.getClient(); 
     
-    
     const { cliente_id = 1, vendedor_id = 1, es_factura, detalles, pagos } = req.body;
-    
     const empresa_id = req.usuario.empresa_id; 
 
     if (!empresa_id || !detalles || detalles.length === 0 || !pagos || pagos.length === 0) {
@@ -20,7 +19,9 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
     try {
         await client.query('BEGIN');
 
-  
+        // ---------------------------
+        // 1. Generar nuevo folio
+        // ---------------------------
         const folioResult = await client.query(
             'SELECT ultimo_folio FROM control_folios WHERE empresa_id = $1 FOR UPDATE',
             [empresa_id]
@@ -36,14 +37,15 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
             await client.query('UPDATE control_folios SET ultimo_folio = $1 WHERE empresa_id = $2', [nuevoFolio, empresa_id]);
         }
 
+        // ---------------------------
+        // 2. Validar y preparar detalles
+        // ---------------------------
         let totalVentaCalculado = 0;
         let subtotalVenta = 0;
         const impuesto = 0; 
         const descuento = 0; 
-
         const detallesCompletos = [];
 
-        
         for (const detalle of detalles) {
             const { producto_id, cantidad } = detalle;
             let { precio_unitario } = detalle;
@@ -67,7 +69,6 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
                 throw new Error(`Stock insuficiente para Producto ID ${producto_id}. Stock: ${stockActual}, solicitado: ${cantidad}.`);
             }
             
-            // Acumular totales
             const subtotalDetalle = cantidad * precio_unitario;
             subtotalVenta += subtotalDetalle;
             
@@ -81,7 +82,9 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         
         totalVentaCalculado = subtotalVenta + impuesto - descuento;
 
-      
+        // ---------------------------
+        // 3. Validar pagos
+        // ---------------------------
         let totalPagado = 0;
         for (const pago of pagos) {
             totalPagado += parseFloat(pago.monto);
@@ -93,6 +96,9 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         
         const cambio = totalPagado - totalVentaCalculado;
 
+        // ---------------------------
+        // 4. Insertar venta
+        // ---------------------------
         const ventaInsertQuery = `
             INSERT INTO ventas (empresa_id, folio, subtotal, impuesto, descuento, total, es_factura, cliente_id, vendedor_id, usuario_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -108,32 +114,60 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
             es_factura, 
             cliente_id, 
             vendedor_id, 
-            req.usuario.id // ID del usuario autenticado
+            req.usuario.id
         ]);
         const venta_id = ventaResult.rows[0].id;
 
-        // ------------------------------------
-        // 5. INSERCIÓN DE DETALLE Y ACTUALIZACIÓN DE STOCK
-        // ------------------------------------
+        // ---------------------------
+        // 5. Insertar detalle_venta + actualizar stock
+        // ---------------------------
         for (const detalle of detallesCompletos) {
-            
             await client.query(
                 'INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, costo_unitario, subtotal) VALUES ($1, $2, $3, $4, $5, $6)',
                 [venta_id, detalle.producto_id, detalle.cantidad, detalle.precio_unitario, detalle.costo_unitario, detalle.subtotal]
             );
 
-            // Actualizar stock
             await client.query(
-                'UPDATE productos SET stock = stock - $1 WHERE id = $2',
-                [detalle.cantidad, detalle.producto_id]
+                'UPDATE productos SET stock = stock - $1 WHERE id = $2 AND empresa_id = $3',
+                [detalle.cantidad, detalle.producto_id, empresa_id]
             );
         }
         
-        
+        // ---------------------------
+        // 6. Insertar pagos_venta
+        // ---------------------------
         for (const pago of pagos) {
             await client.query(
                 'INSERT INTO pagos_venta (venta_id, metodo_pago, monto) VALUES ($1, $2, $3)',
                 [venta_id, pago.metodo, pago.monto]
+            );
+        }
+
+        // ==================================================================================
+        // ✅ 7. REGISTRAR SALIDAS EN movimientos_inventario (¡NUEVO!)
+        // ==================================================================================
+        for (const detalle of detallesCompletos) {
+            // Obtener stock ACTUAL (ya descontado)
+            const stockResult = await client.query(
+                'SELECT stock FROM productos WHERE id = $1 AND empresa_id = $2',
+                [detalle.producto_id, empresa_id]
+            );
+            const nuevoStock = stockResult.rows[0].stock;
+
+            await client.query(
+                `INSERT INTO movimientos_inventario 
+                 (empresa_id, producto_id, tipo, cantidad, nuevo_stock, usuario_id, referencia, motivo)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [
+                    empresa_id,
+                    detalle.producto_id,
+                    'SALIDA',
+                    -detalle.cantidad, // cantidad negativa = salida
+                    nuevoStock,
+                    req.usuario.id,
+                    `VENTA-${venta_id}`,
+                    'Salida por venta registrada en sistema'
+                ]
             );
         }
 
@@ -148,17 +182,22 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
 
     } catch (error) {
         await client.query('ROLLBACK'); 
-        console.error('Error al registrar la venta:', error.message);
-        res.status(500).json({ success: false, message: `Error en la transacción: ${error.message}` });
+        console.error('🔴 Error al registrar la venta:', error.message || error);
+        res.status(500).json({ 
+            success: false, 
+            message: `Error en la transacción: ${error.message || 'Error desconocido.'}` 
+        });
         
     } finally {
         client.release();
     }
 });
 
+// ==================================================================================
+// 2. Endpoints auxiliares para el Punto de Venta (PDV)
+// ==================================================================================
 
-
-
+// Obtener folio actual (sin bloqueo)
 router.get('/folio_actual', verifyToken, async (req, res) => {
     const empresa_id = req.usuario.empresa_id;
     if (!empresa_id) {
@@ -187,15 +226,11 @@ router.get('/folio_actual', verifyToken, async (req, res) => {
         console.error('Error al obtener el folio actual:', error.message);
         res.status(500).json({ success: false, message: 'Error interno del servidor al obtener el folio.' });
     } finally {
-        if (client) {
-            client.release();
-        }
+        if (client) client.release();
     }
 });
 
-
-//Productos
-
+// Productos para PDV (solo de la empresa)
 router.get('/productos', verifyToken, async (req, res) => {
     const empresa_id = req.usuario.empresa_id;
     if (!empresa_id) {
@@ -206,12 +241,9 @@ router.get('/productos', verifyToken, async (req, res) => {
         const query = `
             SELECT 
                 p.id, 
-                p.clave_producto, 
                 p.descripcion, 
                 p.stock, 
                 p.precio,
-                p.categoria_id, 
-                p.proveedor_id,
                 c.nombre AS nombre_categoria,
                 pr.nombre AS nombre_proveedor
             FROM productos p
@@ -221,7 +253,6 @@ router.get('/productos', verifyToken, async (req, res) => {
             ORDER BY p.descripcion;
         `;
         const result = await db.query(query, [empresa_id]);
-
         res.json({ success: true, productos: result.rows });
     } catch (error) {
         console.error('Error al obtener productos para PDV:', error);
@@ -229,16 +260,11 @@ router.get('/productos', verifyToken, async (req, res) => {
     }
 });
 
-
-// Categorias 
-
+// Categorías para PDV
 router.get('/categorias', verifyToken, async (req, res) => {
     const empresa_id = req.usuario.empresa_id;
-
     try {
-        const query = `
-            SELECT id, nombre FROM categorias WHERE empresa_id = $1 ORDER BY nombre;
-        `;
+        const query = `SELECT id, nombre FROM categorias WHERE empresa_id = $1 ORDER BY nombre`;
         const result = await db.query(query, [empresa_id]);
         res.json({ success: true, categorias: result.rows });
     } catch (error) {
@@ -247,15 +273,11 @@ router.get('/categorias', verifyToken, async (req, res) => {
     }
 });
 
-
-
+// Proveedores para PDV
 router.get('/proveedores', verifyToken, async (req, res) => {
     const empresa_id = req.usuario.empresa_id;
-
     try {
-        const query = `
-            SELECT id, nombre FROM proveedores WHERE empresa_id = $1 ORDER BY nombre;
-        `;
+        const query = `SELECT id, nombre FROM proveedores WHERE empresa_id = $1 ORDER BY nombre`;
         const result = await db.query(query, [empresa_id]);
         res.json({ success: true, proveedores: result.rows });
     } catch (error) {
@@ -264,8 +286,11 @@ router.get('/proveedores', verifyToken, async (req, res) => {
     }
 });
 
+// ==================================================================================
+// 3. Reportes de Ventas e Inventario
+// ==================================================================================
 
-// GET /api/admin/ventas/reportes — Reporte detallado de ventas
+// Reporte detallado de ventas (con productos, cliente, vendedor)
 router.get('/reportes', verifyToken, async (req, res) => {
     const { inicio, fin } = req.query;
     const empresaId = req.tenantId;
@@ -305,7 +330,6 @@ router.get('/reportes', verifyToken, async (req, res) => {
     const params = [empresaId];
     let paramIndex = 2;
 
-    // Filtro opcional por rango de fechas
     if (inicio && fin) {
         queryText += ` AND v.fecha_venta::date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
         params.push(inicio, fin);
@@ -331,7 +355,7 @@ router.get('/reportes', verifyToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/ventas/productos-vendidos — Productos vendidos con costo y ganancia
+// Reporte: Productos vendidos (para análisis de margen)
 router.get('/productos-vendidos', verifyToken, async (req, res) => {
     const { inicio, fin } = req.query;
     const empresaId = req.tenantId;

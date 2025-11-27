@@ -473,3 +473,17 @@ tr:hover td {
     color: #cc0000;
     margin-bottom: 5px;
 }
+
+/* En la tabla de inventario */
+#inventory-table th,
+#inventory-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border: 1px solid #dee2e6;
+}
+
+/* Alinear precios a la derecha */
+#inventory-table td:nth-child(4),
+#inventory-table td:nth-child(5) { /* Precio Venta y Precio Compra */
+    text-align: right;
+}

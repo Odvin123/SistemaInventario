@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Movimientos de Inventario | InvenSaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/reporte_inventario.css">
+    <link rel="stylesheet" href="css/StyleLogin.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.history.back()">
+                ⬅️ Volver al Panel Principal
+            </button>
+        </div>
+
+        <h1>Reporte de Movimientos de Inventario</h1>
+
+        <!-- Filtros -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="tipo-movimiento">Tipo de Movimiento:</label>
+                <select id="tipo-movimiento">
+                    <option value="TODOS">TODOS</option>
+                    <option value="ENTRADA">ENTRADA</option>
+                    <option value="SALIDA">SALIDA</option>
+                    <option value="AJUSTE">AJUSTE</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="fecha-inicio">Fecha Inicial:</label>
+                <input type="date" id="fecha-inicio">
+            </div>
+
+            <div class="filter-group">
+                <label for="fecha-fin">Fecha Final:</label>
+                <input type="date" id="fecha-fin">
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn-execute" id="btn-ejecutar">Ejecutar</button>
+                <button class="btn-refresh" id="btn-recargar">Recargar</button>
+                <button class="btn-export" id="btn-exportar">Exportar CSV</button>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-container">
+            <table id="movimientos-table" class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Stock Antes</th>
+                        <th>Stock Después</th>
+                        <th>Usuario</th>
+                        <th>Referencia</th>
+                    </tr>
+                </thead>
+                <tbody id="movimientos-tbody">
+                    <tr><td colspan="8" class="loading">Cargando movimientos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Resumen -->
+        <div class="summary-section">
+            <div class="summary-card">
+                <h3>Entradas</h3>
+                <p id="total-entradas" class="summary-number">0</p>
+                <small>unidades ingresadas</small>
+            </div>
+            <div class="summary-card">
+                <h3>Salidas</h3>
+                <p id="total-salidas" class="summary-number">0</p>
+                <small>unidades vendidas</small>
+            </div>
+            <div class="summary-card">
+                <h3>Balance Neto</h3>
+                <p id="balance-neto" class="summary-number">0</p>
+                <small>(Entradas − Salidas)</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/reporte_inventario.js"></script>
+</body>
+</html>

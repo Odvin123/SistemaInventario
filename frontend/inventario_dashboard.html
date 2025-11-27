@@ -43,10 +43,18 @@
         </div>
 
         <div class="dropdown">
+    <a href="#" class="menu-item">Inventario</a>
+    <div class="dropdown-content">
+        <a href="#" onclick="showView('inventario-view')">Ver Inventario</a>
+        <a href="entrada_inventario.html">➕ Entrada de Inventario</a>
+        <a href="reporte_inventario.html">📊 Reporte de Movimientos</a>
+    </div>
+</div>
+
+        <div class="dropdown">
             <a href="#" class="menu-item">Reportes</a>
             <div class="dropdown-content">
                 <a href="reporte_ventas.html">Ventas</a>
-                <a href="reporte_productos_vendidos.html">Inventario</a>
                 <a href="reporte_productos_vendidos.html">General</a>
             </div>
         </div>
@@ -70,7 +78,7 @@
                                 <th>Descripción</th>
                                 <th>Stock</th>
                                 <th>Precio Venta</th>
-                                <th>Acciones</th>
+                                <th>Precio Compra</th>
                             </tr>
                         </thead>
                         <tbody id="inventory-tbody">
@@ -719,16 +727,13 @@ function renderProductos(productos) {
         const tr = document.createElement('tr');
         tr.className = rowClass;
         
-        tr.innerHTML = `
-            <td>${p.id}</td>
-            <td>${p.descripcion}</td>
-            <td>${stockDisplay}</td>
-            <td style="text-align: right;">C$${parseFloat(p.precio).toFixed(2)}</td>
-            <td class="actions-cell">
-                <button class="btn-edit" onclick="openProductModal(${p.id})">Editar</button>
-                <button class="btn-delete" onclick="deleteProducto(${p.id}, '${p.descripcion}')">Eliminar</button>
-            </td>
-        `;
+     tr.innerHTML = `
+    <td>${p.id}</td>
+    <td>${p.descripcion}</td>
+    <td>${p.stock}</td>
+    <td style="text-align: right;">C$${parseFloat(p.precio).toFixed(2)}</td>
+    <td style="text-align: right; color: #6c757d;">C$${parseFloat(p.costo).toFixed(2)}</td>
+`;
         tbody.appendChild(tr);
     });
     

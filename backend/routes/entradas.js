@@ -78,8 +78,8 @@ router.post('/', verifyToken, async (req, res) => {
 
 // GET /api/admin/inventario/entradas — Listar movimientos (solo ENTRADAS, o filtrar por tipo)
 router.get('/', verifyToken, async (req, res) => {
-    const { tipo = 'ENTRADA', inicio, fin } = req.query;
-    const empresaId = req.tenantId;
+    let { tipo, inicio, fin } = req.query;
+    tipo = (tipo || 'TODOS').toUpperCase();
 
     if (!empresaId) {
         return res.status(403).json({ success: false, message: 'Acceso denegado.' });
