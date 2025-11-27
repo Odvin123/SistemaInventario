@@ -6,6 +6,7 @@
     <title>Panel de Administración de Inventario</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/inventario_dashboard.css" />
+
 </head>
 <body>
 <!-- Hola -->
@@ -17,7 +18,7 @@
             <div class="dashboard-header">
                 <div class="header-left">
                     <h1 id="welcome-message">Bienvenido, Administrador.</h1>
-                    <p>Gestión de Inventario de <span id="company-name-display">Tu Empresa</span></p>
+                    <p>Gestión de Inventario de <span id="company-name-display"> </span></p>
                 </div>
             </div>
             
@@ -38,8 +39,7 @@
                     <a href="#" onclick="showView('proveedores-view')">Proveedores</a>
                     <a href="clientes.html">Clientes</a>
                     <a href="vendedores.html">Vendedores</a>      
-                    <a href="#" onclick="showView('rubros-view')">Rubros</a>
-                    <a href="#" onclick="showView('usuarios-view')">Usuarios</a>
+                 
                 </div>
             </div>
 
@@ -79,6 +79,14 @@
                         <p id="total-productos">--</p>
                         <small>En tu inventario</small>
                     </div>
+                    <div class="stats-card alerta-stock-card"> 
+    <h4>Productos con Stock Bajo</h4>
+    <p id="stock-bajo-count" style="font-size: 2.5rem; font-weight: 700; color: #cc0000;">--</p>
+    <small>Necesitan reabastecimiento</small>
+</div>
+
+<div class="quick-actions-card">
+    </div>
                     <div class="quick-actions-card">
                         <h4>Acciones Rápidas</h4>
                         <button class="btn-export">Exportar (CSV)</button>
@@ -220,6 +228,8 @@
         let proveedoresCache = []; 
         let categoriasCache = []; 
         let productosCache = []; 
+
+        const STOCK_BAJO_UMBRAL = 5;
 
         function showView(viewId) {
             const views = document.querySelectorAll('.view-content');
@@ -670,31 +680,55 @@
             }
         }
 
-        function renderProductos(productos) {
-            const tbody = document.getElementById('inventory-tbody');
-            tbody.innerHTML = '';
-            
-            if (productos.length === 0) {
-                
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay productos registrados.</td></tr>'; 
-                return;
-            }
 
-            productos.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${p.id}</td>
-                    <td>${p.descripcion}</td>
-                    <td>${p.stock}</td>
-                    <td>C$${parseFloat(p.precio).toFixed(2)}</td> 
-                    <td class="actions-cell">
-                        <button class="btn-edit" onclick="openProductModal(${p.id})">Editar</button>
-                        <button class="btn-delete" onclick="deleteProducto(${p.id}, '${p.descripcion}')">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+function renderProductos(productos) {
+    const tbody = document.getElementById('inventory-tbody');
+    tbody.innerHTML = '';
+    
+    let productosBajoStockCount = 0;
+
+    if (productos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay productos registrados.</td></tr>';
+        document.getElementById('stock-bajo-count').textContent = '0'; 
+        return;
+    }
+
+    productos.forEach(p => {
+        const stock = parseInt(p.stock);
+
+        // 2. Determinar si se aplica la clase de alerta
+        let rowClass = '';
+        let stockDisplay = stock;
+
+        if (stock === 0) {
+            // Producto agotado (stock 0)
+            rowClass = 'agotado';
+            stockDisplay = `<span style="color: red; font-weight: bold;">${stock} (AGOTADO)</span>`;
+        } else if (stock <= STOCK_BAJO_UMBRAL) {
+            // Producto con stock bajo (0 < stock <= UMBRAL)
+            rowClass = 'alerta-stock-bajo';
+            productosBajoStockCount++; // Incrementa el contador
         }
+
+        const tr = document.createElement('tr');
+        tr.className = rowClass;
+        
+        tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.descripcion}</td>
+            <td>${stockDisplay}</td>
+            <td style="text-align: right;">C$${parseFloat(p.precio).toFixed(2)}</td>
+            <td class="actions-cell">
+                <button class="btn-edit" onclick="openProductModal(${p.id})">Editar</button>
+                <button class="btn-delete" onclick="deleteProducto(${p.id}, '${p.descripcion}')">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // 3. Actualizar el contador en el panel lateral
+    document.getElementById('stock-bajo-count').textContent = productosBajoStockCount;
+}
         
         async function deleteProducto(id, name) {
             if (!confirm(`¿Está seguro de eliminar el producto "${name}" (Clave: ${id})? Esta acción es irreversible.`)) {
