@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Punto de Venta - TU EMPRESA</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/punto_de_venta.css" />
-    </head>
+</head>
     
 <body>
     <div class="pos-window">
@@ -17,10 +15,10 @@
             </div>
             <div class="pos-title-area">
                 <h2 id="company-name" class="pos-title">JC SOFTWARE SOLUCIONES EN SISTEMAS</h2>
-                <p class="pos-welcome">BIENVENIDO </p>
+                <p class="pos-welcome">BIENVENIDO</p>
             </div>
             <div class="folio-box">
-                Folio: <span id="folio-number"></span>
+                Folio: <span id="folio-number">1</span>
             </div>
             <div style="margin-left: 10px; color: red; font-size: 1.5rem; cursor: pointer;" onclick="window.close()">
                 &#x2715; 
@@ -82,8 +80,9 @@
 
         <div class="pos-footer">
             <div class="footer-info">
-                <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openClienteSelectionModal()" style="cursor: pointer;">PUBLICO EN GENERAL</span></span> 
-                <span>Vendedor: <span class="footer-data" id="footer-vendedor" ondblclick="openVendedorSelectionModal()" style="cursor: pointer;">MOSTRADOR</span></span>
+                <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
+                 <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openClienteSelectionModal()" style="cursor: pointer;">PUBLICO EN GENERAL</span></span>     
+                 <span>Vendedor: <span class="footer-data" id="footer-vendedor">MOSTRADOR</span></span>
             </div>
             <div class="date-time-box">
                 <span id="current-date">--</span>
@@ -198,55 +197,9 @@
             </form>
         </div>
     </div>
-    
-    <div id="clienteSelectionModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <span class="close" onclick="closeClienteSelectionModal()">&times;</span>
-            <h3 style="margin-bottom: 10px;">Seleccionar Cliente</h3>
-            
-            <input type="text" id="filtro-cliente-pos" placeholder="Buscar por Nombre o ID" oninput="filterClientesPOS()" style="width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc;">
-            
-            <div style="max-height: 400px; overflow-y: auto;">
-                <table class="pos-table" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th style="width: 15%;">ID</th>
-                            <th style="width: 65%;">Nombre</th>
-                            <th style="width: 20%;">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pos-clientes-tbody">
-                        <tr><td colspan="3" style="text-align: center;">Cargando clientes...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
-    <div id="vendedorSelectionModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <span class="close" onclick="closeVendedorSelectionModal()">&times;</span>
-            <h3 style="margin-bottom: 10px;">Seleccionar Vendedor</h3>
-            
-            <input type="text" id="filtro-vendedor-pos" placeholder="Buscar por Nombre o ID" oninput="filterVendedoresPOS()" style="width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc;">
-            
-            <div style="max-height: 400px; overflow-y: auto;">
-                <table class="pos-table" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th style="width: 15%;">ID</th>
-                            <th style="width: 65%;">Nombre</th>
-                            <th style="width: 20%;">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pos-vendedores-tbody">
-                        <tr><td colspan="3" style="text-align: center;">Cargando vendedores...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
+    <!-- INICIO BACKEND -->
     <script>
     const API_URL = 'http://localhost:4000/api'; 
     let token = localStorage.getItem('token'); 
@@ -257,19 +210,9 @@
     let categoriasCache = [];
     let proveedoresCache = [];
 
-    let clientesCachePOS = []; 
-    let vendedoresCachePOS = []; 
-
     const defaultAdmin = 'ADMINISTRADOR'; 
     const defaultCliente = 'PUBLICO EN GENERAL';
     const defaultVendedor = 'MOSTRADOR';
-
-    // // NUEVA VARIABLE DE UMBRAL DE STOCK BAJO 
-        const STOCK_BAJO_UMBRAL = 5;
-
-    // ----------------------------------------------------------------------
-    // 1. MANEJO DE ESTADO Y UTILIDADES GLOBALES
-    // ----------------------------------------------------------------------
 
     function loadState() {
         document.getElementById('footer-administrador').textContent = defaultAdmin; 
@@ -279,26 +222,88 @@
 
         document.getElementById('footer-cliente').textContent = currentCliente;
         document.getElementById('footer-vendedor').textContent = currentVendedor;
-        
-        // Asegurar que existan los IDs por defecto
-        if (!localStorage.getItem('currentClienteId')) localStorage.setItem('currentClienteId', 1);
-        if (!localStorage.getItem('currentVendedorId')) localStorage.setItem('currentVendedorId', 1);
     }
-    
-window.updateSelectedEntity = function(type, name, id) {
-    if (type === 'cliente') {
-        localStorage.setItem('currentClienteName', name);
-        localStorage.setItem('currentClienteId', id); 
-        // ESTA ES LA LÍNEA CLAVE: actualiza el texto del span con id="footer-cliente"
-        document.getElementById('footer-cliente').textContent = name; 
-    } else if (type === 'vendedor') {
-        localStorage.setItem('currentVendedorName', name);
-        localStorage.setItem('currentVendedorId', id); 
-        document.getElementById('footer-vendedor').textContent = name;
+window.updateSelectedEntity = function(type, name) {
+        if (type === 'cliente') {
+            localStorage.setItem('currentClienteName', name);
+            document.getElementById('footer-cliente').textContent = name;
+            // Aquí podrías guardar el ID real del cliente en otra variable o localStorage
+        } else if (type === 'vendedor') {
+            localStorage.setItem('currentVendedorName', name);
+            document.getElementById('footer-vendedor').textContent = name;
+        }
+    }
+
+    // Dentro de tu <script> en punto_de_venta.html
+
+let clientesCachePOS = []; // Para almacenar clientes si no quieres recargarlos
+
+// --- NUEVO MODAL DE SELECCIÓN DE CLIENTE ---
+function openClienteSelectionModal() {
+    if (!token) {
+          alert('Sesión no válida. Por favor, inicie sesión.');
+          return;
+    }
+    document.getElementById('clienteSelectionModal').style.display = 'block';
+
+    // 1. Cargar la data de clientes aquí si no está cargada
+    if (clientesCachePOS.length === 0) {
+        loadClientesForPOS();
+    } else {
+        renderClientesForPOS(clientesCachePOS);
     }
 }
 
- 
+function closeClienteSelectionModal() {
+    document.getElementById('clienteSelectionModal').style.display = 'none';
+}
+
+// --- Lógica de Carga y Renderizado ---
+async function loadClientesForPOS() {
+    // Reutiliza la lógica de fetch de tu función 'fetchData'
+    const clientes = await fetchData('clientes'); 
+    clientesCachePOS = clientes;
+    renderClientesForPOS(clientes);
+}
+
+function renderClientesForPOS(clientes) {
+    const tbody = document.getElementById('pos-clientes-tbody');
+    tbody.innerHTML = ''; 
+
+    clientes.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.nombre}</td>
+            <td style="text-align: center;">
+                <button class="btn-primary" 
+                        onclick="selectClientFromModal('${c.nombre.replace(/'/g, "\\'")}', ${c.id})">
+                    Seleccionar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function selectClientFromModal(name, id) {
+    // La función que ya existe en el padre
+    updateSelectedEntity('cliente', name);
+    localStorage.setItem('currentClienteId', id); 
+    closeClienteSelectionModal();
+}
+
+// --- Filtrado (Opcional, pero recomendado) ---
+function filterClientesPOS() {
+    const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
+
+    const clientesFiltrados = clientesCachePOS.filter(c => 
+        c.nombre.toLowerCase().includes(filtro) || 
+        c.id.toString().includes(filtro) 
+    );
+    renderClientesForPOS(clientesFiltrados);
+}
+    
     function openWindow(url) {
         const width = 1000;
         const height = 700;
@@ -307,7 +312,7 @@ window.updateSelectedEntity = function(type, name, id) {
         
         const newWindow = window.open(
             url,
-            'CatalogosPOSWindow', 
+            'SeleccionPOSWindow', 
             `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
         );
 
@@ -317,176 +322,6 @@ window.updateSelectedEntity = function(type, name, id) {
             alert('El navegador bloqueó la ventana emergente. Por favor, permítalas.');
         }
     }
-
-    async function fetchData(endpoint) {
-          try {
-            const response = await fetch(`${API_URL}/admin/${endpoint}`, { 
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) {
-                 const error = await response.json();
-                 console.error(`Error al cargar ${endpoint}:`, error);
-                 return [];
-            }
-            const data = await response.json();
-            return data[`${endpoint}`]; 
-        } catch (error) { 
-            console.error(`Error de conexión al cargar ${endpoint}:`, error); 
-            return [];
-        }
-    }
-
-    // Lógica de Fecha y Hora 
-    function updateDateTime() {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('es-NI', {
-            day: '2-digit', month: '2-digit', year: 'numeric'
-        });
-        const timeStr = now.toLocaleTimeString('es-NI', {
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-
-        document.getElementById('current-date').textContent = dateStr;
-        document.getElementById('current-time').textContent = timeStr;
-    }
-
-
-    // ----------------------------------------------------------------------
-    // 2. LÓGICA DE SELECCIÓN DE CLIENTE (Modal/Doble Clic)
-    // ----------------------------------------------------------------------
-
-    function openClienteSelectionModal() {
-        if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; }
-        document.getElementById('clienteSelectionModal').style.display = 'block';
-        
-        if (clientesCachePOS.length === 0) {
-            loadClientesForPOS();
-        } else {
-            renderClientesForPOS(clientesCachePOS);
-        }
-    }
-
-    function closeClienteSelectionModal() {
-        document.getElementById('clienteSelectionModal').style.display = 'none';
-    }
-
-    async function loadClientesForPOS() {
-        const clientes = await fetchData('clientes'); 
-        clientesCachePOS = clientes;
-        renderClientesForPOS(clientes);
-    }
-
-    function renderClientesForPOS(clientes) {
-        const tbody = document.getElementById('pos-clientes-tbody');
-        tbody.innerHTML = ''; 
-
-        if (clientes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No se encontraron clientes.</td></tr>';
-            return;
-        }
-        
-        clientes.forEach(c => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${c.id}</td>
-                <td>${c.nombre}</td>
-                <td style="text-align: center;">
-                    <button class="btn-primary" 
-                            onclick="selectClientFromModal('${c.nombre.replace(/'/g, "\\'")}', ${c.id})"
-                            style="background-color: #007bff; color: white; padding: 5px 10px; border: none; cursor: pointer; border-radius: 3px;">
-                        Seleccionar
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function selectClientFromModal(name, id) {
-        updateSelectedEntity('cliente', name, id); 
-        closeClienteSelectionModal();
-    }
-
-    function filterClientesPOS() {
-        const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
-        
-        const clientesFiltrados = clientesCachePOS.filter(c => 
-            c.nombre.toLowerCase().includes(filtro) || 
-            c.id.toString().includes(filtro) 
-        );
-        renderClientesForPOS(clientesFiltrados);
-    }
-    
-    // ----------------------------------------------------------------------
-    // 3. LÓGICA DE SELECCIÓN DE VENDEDOR (Modal/Doble Clic)
-    // ----------------------------------------------------------------------
-    
-    function openVendedorSelectionModal() {
-        if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; }
-        document.getElementById('vendedorSelectionModal').style.display = 'block';
-        
-        if (vendedoresCachePOS.length === 0) {
-            loadVendedoresForPOS();
-        } else {
-            renderVendedoresForPOS(vendedoresCachePOS);
-        }
-    }
-
-    function closeVendedorSelectionModal() {
-        document.getElementById('vendedorSelectionModal').style.display = 'none';
-    }
-
-    async function loadVendedoresForPOS() {
-        const vendedores = await fetchData('vendedores'); 
-        vendedoresCachePOS = vendedores;
-        renderVendedoresForPOS(vendedores);
-    }
-
-    function renderVendedoresForPOS(vendedores) {
-        const tbody = document.getElementById('pos-vendedores-tbody');
-        tbody.innerHTML = ''; 
-
-        if (vendedores.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No se encontraron vendedores.</td></tr>';
-            return;
-        }
-        
-        vendedores.forEach(v => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${v.id}</td>
-                <td>${v.nombre}</td>
-                <td style="text-align: center;">
-                    <button class="btn-primary" 
-                            onclick="selectVendedorFromModal('${v.nombre.replace(/'/g, "\\'")}', ${v.id})"
-                            style="background-color: #007bff; color: white; padding: 5px 10px; border: none; cursor: pointer; border-radius: 3px;">
-                        Seleccionar
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function selectVendedorFromModal(name, id) {
-        updateSelectedEntity('vendedor', name, id); 
-        closeVendedorSelectionModal();
-    }
-
-    function filterVendedoresPOS() {
-        const filtro = document.getElementById('filtro-vendedor-pos').value.toLowerCase();
-        
-        const vendedoresFiltrados = vendedoresCachePOS.filter(v => 
-            v.nombre.toLowerCase().includes(filtro) || 
-            v.id.toString().includes(filtro) 
-        );
-        renderVendedoresForPOS(vendedoresFiltrados);
-    }
-
-    // ----------------------------------------------------------------------
-    // 4. LÓGICA DE PRODUCTOS / MOVIMIENTO DE VENTA (Modales)
-    // ----------------------------------------------------------------------
-
     function openMovimientoVentasModal() {
         if (!token) {
               alert('Sesión no válida. Por favor, inicie sesión.');
@@ -513,10 +348,151 @@ window.updateSelectedEntity = function(type, name, id) {
     function closeBusquedaProductoModal() {
         document.getElementById('busquedaProductoModal').style.display = 'none';
     }
+    
+    function openCajaModal(total) {
+        document.getElementById('cajaModal').style.display = 'block';
+        document.getElementById('pago-efectivo').value = total.toFixed(2);
+        document.getElementById('pago-tarjeta').value = '0.00';
+        document.getElementById('pago-transferencia').value = '0.00';
+        document.getElementById('pago-credito').value = '0.00';
+        
+        document.getElementById('caja-total-a-pagar').textContent = `C$${total.toFixed(2)}`;
+        document.getElementById('total-letras').textContent = '(Monto en letras no implementado)'; // Mensaje temporal
+        
+        calcularCambio();
+    }
+
+    function closeCajaModal() {
+        document.getElementById('cajaModal').style.display = 'none';
+        document.getElementById('cajaForm').reset();
+    }
+
+
+    function calcularCambio() {
+        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+        const totalVenta = parseFloat(totalVentaStr);
+        
+        const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
+        const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
+        const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
+        const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+
+        const totalPagado = efectivo + tarjeta + transferencia + credito;
+        const cambio = totalPagado - totalVenta;
+        
+        const cambioDisplay = document.getElementById('caja-monto-cambio');
+        cambioDisplay.textContent = `C$${cambio.toFixed(2)}`;
+        cambioDisplay.style.color = cambio >= 0 ? '#28a745' : '#dc3545';
+    }
+    
+    function handleCobrar() {
+        if (ventaActual.length === 0) {
+            alert("No hay productos en la venta para cobrar.");
+            return;
+        }
+        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+        const totalVenta = parseFloat(totalVentaStr);
+        
+        openCajaModal(totalVenta);
+    }
+
+    async function finalizarVentaDesdeCaja() {
+        
+        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
+        const totalVenta = parseFloat(totalVentaStr);
+
+        const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
+        const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
+        const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
+        const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+        
+        const totalPagado = efectivo + tarjeta + transferencia + credito;
+
+        if (totalPagado < totalVenta) {
+            alert(`¡ERROR! Falta pagar C$${(totalVenta - totalPagado).toFixed(2)}. Complete el pago.`);
+            return;
+        }
+        
+        const pagos = [];
+        if (efectivo > 0) pagos.push({ metodo: 'Efectivo', monto: efectivo });
+        if (tarjeta > 0) pagos.push({ metodo: 'Tarjeta', monto: tarjeta });
+        if (transferencia > 0) pagos.push({ metodo: 'Transferencia', monto: transferencia });
+        if (credito > 0) pagos.push({ metodo: 'Credito', monto: credito });
+
+        if (pagos.length === 0) {
+            alert("Debe ingresar al menos un pago para finalizar la venta.");
+            return;
+        }
+        
+        const btnAceptar = document.querySelector('#cajaModal .btn-add-product');
+        btnAceptar.disabled = true;
+
+        try {
+            const ventaData = {
+                cliente_id: 1, 
+                vendedor_id: 1, 
+                es_factura: document.getElementById('check-factura').checked,
+                detalles: ventaActual.map(item => ({
+                    producto_id: item.id,
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio
+                })),
+                pagos: pagos 
+            };
+
+            const response = await fetch(`${API_URL}/admin/ventas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(ventaData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert(`¡ÉXITO! Venta #${result.folio} registrada. Cambio a devolver: C$${result.cambio}`);
+                
+                ventaActual = [];
+                renderVentaActual();
+                closeCajaModal();
+                loadInventarioPDV(); 
+                
+            } else {
+                alert('Error al registrar la venta: ' + (result.message || 'Error desconocido del servidor.'));
+            }
+        } catch (error) {
+            alert('Error de conexión o de red al procesar la venta.');
+            console.error('Error en fetch (finalizarVentaDesdeCaja):', error);
+        } finally {
+            btnAceptar.disabled = false; 
+        }
+    }
+
+
 
     async function loadCategoriasAndInitBusqueda() {
         await Promise.all([loadCategoriasPDV(), loadInventarioPDV(), loadProveedoresPDV()]);
         renderClasificaciones();
+    }
+
+    async function fetchData(endpoint) {
+          try {
+            const response = await fetch(`${API_URL}/admin/${endpoint}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                 const error = await response.json();
+                 console.error(`Error al cargar ${endpoint}:`, error);
+                 return [];
+            }
+            const data = await response.json();
+            return data[`${endpoint}`]; 
+        } catch (error) { 
+            console.error(`Error de conexión al cargar ${endpoint}:`, error); 
+            return [];
+        }
     }
 
     async function loadCategoriasPDV() {
@@ -533,6 +509,7 @@ window.updateSelectedEntity = function(type, name, id) {
     async function loadProveedoresPDV() {
         proveedoresCache = await fetchData('proveedores');
     }
+
 
     function renderClasificaciones() {
         const select = document.getElementById('clasificacion');
@@ -666,6 +643,7 @@ window.updateSelectedEntity = function(type, name, id) {
             return;
         }
 
+
         addProductToSale(productoData, cantidad, precio);
         closeMovimientoVentasModal();
     });
@@ -746,140 +724,19 @@ window.updateSelectedEntity = function(type, name, id) {
     }
 
 
-    // ----------------------------------------------------------------------
-    // 5. LÓGICA DE CAJA (Cobro y Venta Final)
-    // ----------------------------------------------------------------------
+    // Lógica de Fecha y Hora 
+    function updateDateTime() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-NI', {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        const timeStr = now.toLocaleTimeString('es-NI', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
 
-    function openCajaModal(total) {
-        document.getElementById('cajaModal').style.display = 'block';
-        
-        // Inicializar pagos con el total en efectivo si no hay otra cosa
-        document.getElementById('pago-efectivo').value = total.toFixed(2);
-        document.getElementById('pago-tarjeta').value = '0.00';
-        document.getElementById('pago-transferencia').value = '0.00';
-        document.getElementById('pago-credito').value = '0.00';
-        
-        document.getElementById('caja-total-a-pagar').textContent = `C$${total.toFixed(2)}`;
-        document.getElementById('total-letras').textContent = '(Monto en letras no implementado)'; 
-        
-        calcularCambio();
+        document.getElementById('current-date').textContent = dateStr;
+        document.getElementById('current-time').textContent = timeStr;
     }
-
-    function closeCajaModal() {
-        document.getElementById('cajaModal').style.display = 'none';
-        document.getElementById('cajaForm').reset();
-    }
-
-
-    function calcularCambio() {
-        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
-        const totalVenta = parseFloat(totalVentaStr);
-        
-        const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
-        const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
-        const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
-        const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
-
-        const totalPagado = efectivo + tarjeta + transferencia + credito;
-        const cambio = totalPagado - totalVenta;
-        
-        const cambioDisplay = document.getElementById('caja-monto-cambio');
-        cambioDisplay.textContent = `C$${cambio.toFixed(2)}`;
-        cambioDisplay.style.color = cambio >= 0 ? '#28a745' : '#dc3545';
-    }
-    
-    function handleCobrar() {
-        if (ventaActual.length === 0) {
-            alert("No hay productos en la venta para cobrar.");
-            return;
-        }
-        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
-        const totalVenta = parseFloat(totalVentaStr);
-        
-        openCajaModal(totalVenta);
-    }
-
-    async function finalizarVentaDesdeCaja() {
-        
-        const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
-        const totalVenta = parseFloat(totalVentaStr);
-
-        const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
-        const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
-        const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
-        const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
-        
-        const totalPagado = efectivo + tarjeta + transferencia + credito;
-
-        if (totalPagado < totalVenta) {
-            alert(`¡ERROR! Falta pagar C$${(totalVenta - totalPagado).toFixed(2)}. Complete el pago.`);
-            return;
-        }
-        
-        const pagos = [];
-        if (efectivo > 0) pagos.push({ metodo: 'Efectivo', monto: efectivo });
-        if (tarjeta > 0) pagos.push({ metodo: 'Tarjeta', monto: tarjeta });
-        if (transferencia > 0) pagos.push({ metodo: 'Transferencia', monto: transferencia });
-        if (credito > 0) pagos.push({ metodo: 'Crédito', monto: credito });
-
-        if (pagos.length === 0) {
-            alert("Debe ingresar al menos un pago para finalizar la venta.");
-            return;
-        }
-        
-        const btnAceptar = document.querySelector('#cajaModal .btn-add-product');
-        btnAceptar.disabled = true;
-
-        try {
-            // Obtener IDs guardados en localStorage
-            const clienteId = localStorage.getItem('currentClienteId') || 1;
-            const vendedorId = localStorage.getItem('currentVendedorId') || 1;
-
-            const ventaData = {
-                cliente_id: parseInt(clienteId), 
-                vendedor_id: parseInt(vendedorId), 
-                es_factura: document.getElementById('check-factura').checked,
-                detalles: ventaActual.map(item => ({
-                    producto_id: item.id,
-                    cantidad: item.cantidad,
-                    precio_unitario: item.precio
-                })),
-                pagos: pagos 
-            };
-
-            const response = await fetch(`${API_URL}/admin/ventas`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(ventaData)
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                alert(`¡ÉXITO! Venta #${result.folio} registrada. Cambio a devolver: C$${(result.cambio).toFixed(2)}`);
-                
-                ventaActual = [];
-                renderVentaActual();
-                closeCajaModal();
-                loadInventarioPDV(); 
-                
-            } else {
-                alert('Error al registrar la venta: ' + (result.message || 'Error desconocido del servidor.'));
-            }
-        } catch (error) {
-            alert('Error de conexión o de red al procesar la venta.');
-            console.error('Error en fetch (finalizarVentaDesdeCaja):', error);
-        } finally {
-            btnAceptar.disabled = false; 
-        }
-    }
-    
-    // ----------------------------------------------------------------------
-    // 6. INICIALIZACIÓN
-    // ----------------------------------------------------------------------
 
     document.addEventListener('keydown', function(event) {
         if (event.code === 'F2') {
@@ -890,27 +747,24 @@ window.updateSelectedEntity = function(type, name, id) {
             event.preventDefault(); 
             openWindow('clientes.html');
         }
-
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
         loadState();
         const nombreEmpresa = tenantId ? tenantId.toUpperCase() : "TU EMPRESA COMERCIAL";
-        document.getElementById('company-name').textContent = nombreEmpresa;  
-        
+        document.getElementById('company-name').textContent = nombreEmpresa;  
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
         renderVentaActual();
         
-        // Listener para la lupa y el input de código de barras (puede ser mejorado)
         document.querySelector('.search-icon').addEventListener('click', openMovimientoVentasModal);
         
-        // Carga inicial de datos (Categorías, Inventario, Proveedores, Clientes/Vendedores para POS)
+        document.querySelector('.cobrar-btn').removeEventListener('click', finalizarVentaDesdeCaja); 
+        document.querySelector('.cobrar-btn').addEventListener('click', handleCobrar);
+
         await loadCategoriasAndInitBusqueda();
-        await loadClientesForPOS();
-        await loadVendedoresForPOS();
     });
-    </script>
+</script>
 </body>
 </html>
