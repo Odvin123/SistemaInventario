@@ -55,9 +55,18 @@ function generateRandomPassword(length = 12) {
 }
 
 
+// Configuración de CORS para Vercel
 app.use(cors({
-    origin: 'http://127.0.0.1:5500' 
+    origin: [
+        'https://sistema-inventario-gilt.vercel.app', // TU DOMINIO DE VERCEL
+        'http://localhost:5500',   // Para desarrollo local
+        'http://127.0.0.1:5500'    // Otro puerto común de Live Server
+    ],
+    credentials: true, // Importante si usas cookies o sesiones
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json()); 
 
 app.get('/', (req, res) => {
