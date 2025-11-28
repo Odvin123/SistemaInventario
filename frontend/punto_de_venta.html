@@ -547,7 +547,7 @@
             document.getElementById('cajaModal').style.display = 'block';
             document.getElementById('pago-efectivo').value = total.toFixed(2);
             document.getElementById('caja-total-a-pagar').textContent = `C$${total.toFixed(2)}`;
-            document.getElementById('total-letras').textContent = '(Monto en letras no implementado)';
+            document.getElementById('total-letras').textContent = numeroALetras(total);
             calcularCambio();
 
             // Guardar para el ticket
