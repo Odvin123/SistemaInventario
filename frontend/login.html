@@ -17,8 +17,27 @@
             <label for="email">Correo Electrónico:</label>
             <input type="email" id="email" required><br><br>
 
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" required><br><br>
+           <label for="password">Contraseña:</label>
+            <div style="position: relative; display: inline-block; width: 100%;">
+            <input type="password" id="password" required style="width: calc(100% - 40px); padding-right: 40px;">
+         <button type="button" 
+          id="togglePassword" 
+          style="position: absolute; right: 2px; top: 2px; height: calc(100% - 4px); width: 36px; background: transparent; border: none; cursor: pointer; font-size: 18px;"
+          aria-label="Mostrar u ocultar contraseña">👁️
+            
+            </button>
+            </div><br><br>
+            <a href="index.html" class="btn-back-home" style="
+    display: inline-block;
+    margin-bottom: 15px;
+    padding: 8px 16px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 500;
+">← Volver al Inicio</a><br><br>
 
             <button type="submit" id="loginButton">Iniciar Sesión</button>
             <p id="lockoutMessage" style="color: red; display: none; margin-top: 10px;">Demasiados intentos fallidos. Intente de nuevo en <span id="countdown">10</span> segundos.</p>
@@ -30,6 +49,8 @@
     </div>
 
     <script>
+
+
         const API_URL_LOGIN = 'http://localhost:4000/api/login';
         const loginForm = document.getElementById('loginForm');
         const loginButton = document.getElementById('loginButton');
@@ -40,6 +61,15 @@
         const MAX_ATTEMPTS = 3;
         const LOCKOUT_DURATION_MS = 10000; 
         let isLocked = false;
+
+
+        // Toggle de visibilidad de contraseña
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    this.textContent = type === 'password' ? '👁️' : '🙈';
+});
 
 
         function setLockout(duration) {
