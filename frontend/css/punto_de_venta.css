@@ -15,7 +15,7 @@
   --text: #1e293b;
   --gray: #64748b;
   --success: #10b981;
-  --warning: #f59e0b;
+  --warning: #f59e08;
   --danger: #ef4444;
   --yellow: #eab308;
   --transition: all 0.3s ease;
@@ -219,14 +219,17 @@ body {
 }
 
 /* === TABLA DE VENTA === */
-.pos-table th {
-    background-color: #2563eb; /* Azul primario */
-    color: white; /* Letra blanca */
-    border-bottom: 1px solid #1d4ed8;
-    padding: 5px;
-    text-align: left;
-    font-weight: 700;
+.pos-table-container {
+  flex-grow: 1;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
+
 .pos-table {
   width: 100%;
   border-collapse: collapse;
@@ -241,17 +244,20 @@ body {
 }
 
 .pos-table thead {
-  background: linear-gradient(to right, var(--primary), var(--primary-dark));
-  color: white;
+  /* Eliminado background aquí para no interferir con th */
 }
 
+/* ✅ CORRECCIÓN CLAVE: UNA SOLA REGLA PARA .pos-table th */
 .pos-table th {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white; /* ✅ Letra blanca, visible */
   padding: 12px 16px;
   text-align: left;
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .pos-table tbody {
@@ -269,9 +275,10 @@ body {
 }
 
 .pos-table td {
-    padding: 5px;
-    border-bottom: 1px solid #eee;
-    color: #222; /* Negro suave */
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 .pos-table tr:last-child td {
@@ -580,7 +587,6 @@ body {
     justify-content: center;
   }
 
-  /* Panel de acciones en columna */
   .pos-actions-panel {
     flex-direction: column;
     align-items: stretch;
@@ -615,7 +621,6 @@ body {
     padding: 14px;
   }
 
-  /* Footer apilado */
   .pos-footer {
     flex-direction: column;
     align-items: stretch;
@@ -630,30 +635,26 @@ body {
     justify-content: center;
   }
 
-  /* Asegurar que la tabla sea scrollable en móvil */
   .pos-table-container {
-    flex-grow: 1;
-    min-height: 200px; /* Mínimo para que siempre haya espacio */
+    min-height: 200px;
   }
 
   .pos-table tbody {
-    max-height: 250px; /* Ajustado para móvil */
+    max-height: 250px;
     overflow-y: auto;
   }
 
-  /* Hacer que todo el contenedor principal sea scrollable si no cabe */
   .pos-main {
     overflow: auto;
   }
 
-  /* Ajustar altura del contenedor principal para que no se corte */
   .pos-window {
     max-height: 100vh;
     height: auto;
   }
 }
 
-/* === SCROLL PERSONALIZADO PARA MEJOR UX === */
+/* === SCROLL PERSONALIZADO === */
 .pos-table tbody::-webkit-scrollbar {
   width: 8px;
 }

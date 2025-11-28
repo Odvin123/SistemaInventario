@@ -65,12 +65,12 @@
                 Área para Logo
             </div>
             <div class="pos-title-area">
-                <h1 id="company-name" class="pos-title">SAAS</h1>
-                <p class="pos-welcome">BIENVENIDO</p>
-            </div>
-            <div class="folio-box">
-                Folio: <span id="folio-number">1</span>
-            </div>
+    <h1 id="company-name" class="pos-title">BIENVENIDO —</h1>
+    <p id="tenant-display" class="pos-welcome">—</p>
+</div>
+<div class="folio-box">
+    Folio: <span id="folio-number">Cargando...</span>
+</div>
             <button class="close-btn" aria-label="Cerrar ventana" onclick="window.close()">
                 &#x2715; 
             </button>
@@ -133,7 +133,6 @@
         
         <footer class="pos-footer">
             <div class="footer-info">
-                <span>Le atiende: <span class="footer-data" id="footer-administrador">ADMINISTRADOR</span></span>
                 
                 <span>Cliente: 
                     <span class="footer-data" id="footer-cliente" 
@@ -916,8 +915,31 @@
             }
         }
 
-       
+       function generateTicket(folio, productos, total, clienteNombre, vendedorNombre, cambio) {
+    const now = new Date();
+    const fechaHora = now.toLocaleString('es-NI');
 
+    // ✅ Incluir nombre de la empresa
+    const nombreEmpresa = localStorage.getItem('nombre_empresa') || 'TU EMPRESA';
+
+    const ticketData = {
+        folio,
+        fechaHora,
+        clienteNombre,
+        vendedorNombre,
+        productos,
+        total,
+        cambio,
+        nombreEmpresa  // ✅ Clave: sin esto, el ticket no muestra la empresa
+    };
+
+    sessionStorage.setItem('ticketData', JSON.stringify(ticketData));
+    const ticketWindow = window.open('ticket.html', '_blank', 'width=350,height=600,resizable,scrollbars');
+    
+    if (!ticketWindow) {
+        alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes.');
+    }
+}
         // Atajos de teclado
         document.addEventListener('keydown', function(event) {
             const tagName = event.target.tagName.toLowerCase();
@@ -950,58 +972,53 @@
             }
         });
 
-        // ✅ Nueva función: genera ticket en ventana nueva SIN document.write
-function generateTicket(folio, productos, total, clienteNombre, vendedorNombre, cambio) {
-    const now = new Date();
-    const fechaHora = now.toLocaleString('es-NI');
-
-    const ticketData = {
-        folio,
-        fechaHora,
-        clienteNombre,
-        vendedorNombre,
-        productos,
-        total,
-        cambio
-    };
-
-    sessionStorage.setItem('ticketData', JSON.stringify(ticketData));
-
-    const ticketWindow = window.open('ticket.html', '_blank', 'width=350,height=600,resizable,scrollbars');
-    
-    if (!ticketWindow) {
-        alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para imprimir el ticket.');
+       // ✅ Inicialización
+       document.addEventListener('DOMContentLoaded', async () => {
+    if (!token) {
+        alert('Sesión no válida. Redirigiendo al login.');
+        window.location.href = 'login.html';
+        return;
     }
-}       // ✅ Inicialización
-        document.addEventListener('DOMContentLoaded', async () => {
-            loadState();
-            const nombreEmpresa = tenantId ? tenantId.toUpperCase() : "TU EMPRESA COMERCIAL"; 
-            document.getElementById('company-name').textContent = nombreEmpresa; 
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
 
-            renderVentaActual();
-            
-            document.querySelector('.search-icon').addEventListener('click', openMovimientoVentasModal);
-            document.getElementById('barcode-input').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault(); 
-                    openMovimientoVentasModal(); 
-                }
-            });
-            
-            const cobrarBtn = document.querySelector('.cobrar-btn');
-            if(cobrarBtn) {
-                cobrarBtn.removeEventListener('click', handleCobrar); 
-                cobrarBtn.addEventListener('click', handleCobrar);
-            }
-            
-            document.getElementById('proveedorForm')?.addEventListener('submit', saveProveedor);
-            document.getElementById('categoriaForm')?.addEventListener('submit', saveCategoria); 
-            document.getElementById('productForm')?.addEventListener('submit', saveProduct); 
+    loadState();
 
-            await loadCategoriasAndInitBusqueda();
+    // ✅ 1. Mostrar nombre de empresa y tenant_id
+    const nombreEmpresa = localStorage.getItem('nombre_empresa') || 'TU EMPRESA';
+    document.getElementById('company-name').textContent = `BIENVENIDO ${nombreEmpresa}`;
+    document.getElementById('tenant-display').textContent = tenantId || '—';
+
+    // ✅ 2. Cargar folio dinámico desde backend
+    try {
+        const folioRes = await fetch(`${API_URL}/admin/ventas/folio_actual`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
+        const folioData = await folioRes.json();
+        document.getElementById('folio-number').textContent = folioData.success ? folioData.folio : '1';
+    } catch (e) {
+        console.error('Error al cargar folio:', e);
+        document.getElementById('folio-number').textContent = '1';
+    }
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    renderVentaActual();
+    
+    document.querySelector('.search-icon').addEventListener('click', openMovimientoVentasModal);
+    document.getElementById('barcode-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            openMovimientoVentasModal(); 
+        }
+    });
+    
+    const cobrarBtn = document.querySelector('.cobrar-btn');
+    if(cobrarBtn) {
+        cobrarBtn.removeEventListener('click', handleCobrar); 
+        cobrarBtn.addEventListener('click', handleCobrar);
+    }
+    
+    await loadCategoriasAndInitBusqueda();
+});
 
         // Funciones placeholder (para evitar errores si se llaman)
         function handleCorteCaja() { alert('Función de corte de caja no implementada.'); }

@@ -3,9 +3,7 @@ const router = express.Router();
 const db = require('../db'); 
 const { verifyToken, checkRole } = require('../middleware/auth'); 
 
-// ==================================================================================
-// 1. REGISTRO DE VENTA (con transacción ACID + registro de SALIDAS en movimientos_inventario)
-// ==================================================================================
+
 router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async (req, res) => {
     const client = await db.getClient(); 
     
@@ -19,9 +17,6 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
     try {
         await client.query('BEGIN');
 
-        // ---------------------------
-        // 1. Generar nuevo folio
-        // ---------------------------
         const folioResult = await client.query(
             'SELECT ultimo_folio FROM control_folios WHERE empresa_id = $1 FOR UPDATE',
             [empresa_id]
@@ -37,9 +32,7 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
             await client.query('UPDATE control_folios SET ultimo_folio = $1 WHERE empresa_id = $2', [nuevoFolio, empresa_id]);
         }
 
-        // ---------------------------
-        // 2. Validar y preparar detalles
-        // ---------------------------
+        
         let totalVentaCalculado = 0;
         let subtotalVenta = 0;
         const impuesto = 0; 
@@ -82,9 +75,7 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         
         totalVentaCalculado = subtotalVenta + impuesto - descuento;
 
-        // ---------------------------
-        // 3. Validar pagos
-        // ---------------------------
+       
         let totalPagado = 0;
         for (const pago of pagos) {
             totalPagado += parseFloat(pago.monto);
@@ -118,9 +109,7 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
         ]);
         const venta_id = ventaResult.rows[0].id;
 
-        // ---------------------------
-        // 5. Insertar detalle_venta + actualizar stock
-        // ---------------------------
+       
         for (const detalle of detallesCompletos) {
             await client.query(
                 'INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, costo_unitario, subtotal) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -133,9 +122,7 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
             );
         }
         
-        // ---------------------------
-        // 6. Insertar pagos_venta
-        // ---------------------------
+        
         for (const pago of pagos) {
             await client.query(
                 'INSERT INTO pagos_venta (venta_id, metodo_pago, monto) VALUES ($1, $2, $3)',
@@ -143,11 +130,8 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
             );
         }
 
-        // ==================================================================================
-        // ✅ 7. REGISTRAR SALIDAS EN movimientos_inventario (¡NUEVO!)
-        // ==================================================================================
+        
         for (const detalle of detallesCompletos) {
-            // Obtener stock ACTUAL (ya descontado)
             const stockResult = await client.query(
                 'SELECT stock FROM productos WHERE id = $1 AND empresa_id = $2',
                 [detalle.producto_id, empresa_id]
@@ -162,7 +146,7 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
                     empresa_id,
                     detalle.producto_id,
                     'SALIDA',
-                    -detalle.cantidad, // cantidad negativa = salida
+                    -detalle.cantidad, 
                     nuevoStock,
                     req.usuario.id,
                     `VENTA-${venta_id}`,
@@ -193,11 +177,7 @@ router.post('/', verifyToken, checkRole(['administrador', 'super_admin']), async
     }
 });
 
-// ==================================================================================
-// 2. Endpoints auxiliares para el Punto de Venta (PDV)
-// ==================================================================================
 
-// Obtener folio actual (sin bloqueo)
 router.get('/folio_actual', verifyToken, async (req, res) => {
     const empresa_id = req.usuario.empresa_id;
     if (!empresa_id) {
@@ -286,11 +266,7 @@ router.get('/proveedores', verifyToken, async (req, res) => {
     }
 });
 
-// ==================================================================================
-// 3. Reportes de Ventas e Inventario
-// ==================================================================================
 
-// Reporte detallado de ventas (con productos, cliente, vendedor)
 router.get('/reportes', verifyToken, async (req, res) => {
     const { inicio, fin } = req.query;
     const empresaId = req.tenantId;

@@ -3,7 +3,6 @@ const router = express.Router();
 const pool = require('../db'); 
 const { verifyToken } = require('../middleware/auth'); 
 
-// Middleware para roles administrativos
 const checkAdminRole = (req, res, next) => {
     const rol = req.usuario.rol;
     if (rol !== 'administrador' && rol !== 'super_admin') {
@@ -12,9 +11,6 @@ const checkAdminRole = (req, res, next) => {
     next();
 };
 
-// ==================================================================================
-// 1. LISTAR PRODUCTOS
-// ==================================================================================
 router.get('/', verifyToken, async (req, res) => {
     const esSuperAdmin = req.esSuperAdmin;
     const empresaId = req.tenantId; 
@@ -59,9 +55,6 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// ==================================================================================
-// 2. CREAR PRODUCTO (+ REGISTRO AUTOMÁTICO DE ENTRADA SI STOCK > 0)
-// ==================================================================================
 router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
@@ -83,7 +76,6 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     }
 
     try {
-        // Validar que proveedor y categoría existen y pertenecen a la empresa
         const validationQuery = `
             SELECT EXISTS(SELECT 1 FROM categorias WHERE id = $1 AND empresa_id = $3) AS categoria_valida,
                    EXISTS(SELECT 1 FROM proveedores WHERE id = $2 AND empresa_id = $3) AS proveedor_valido
@@ -142,9 +134,7 @@ router.post('/', verifyToken, checkAdminRole, async (req, res) => {
     }
 });
 
-// ==================================================================================
-// 3. ACTUALIZAR PRODUCTO
-// ==================================================================================
+
 router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
@@ -207,9 +197,6 @@ router.put('/:id', verifyToken, checkAdminRole, async (req, res) => {
     }
 });
 
-// ==================================================================================
-// 4. ELIMINAR PRODUCTO
-// ==================================================================================
 router.delete('/:id', verifyToken, checkAdminRole, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });

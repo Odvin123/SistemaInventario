@@ -1,4 +1,3 @@
-// routes/vendedores.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db'); // Usando tu pool de conexión
@@ -6,9 +5,6 @@ const { verifyToken } = require('../middleware/auth');
 
 const DEFAULT_VENDEDOR = 'administrador'; 
 
-// ----------------------------------------------------------------------------------
-// A. GET /api/admin/vendedores - Obtiene todos los vendedores de la empresa autenticada
-// ----------------------------------------------------------------------------------
 router.get('/', verifyToken, async (req, res) => {
     
     const esSuperAdmin = req.esSuperAdmin;
@@ -40,11 +36,6 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-
-
-// ----------------------------------------------------------------------------------
-// B. POST /api/admin/vendedores - Crea un nuevo vendedor para la empresa autenticada
-// ----------------------------------------------------------------------------------
 router.post('/', verifyToken, async (req, res) => {
     if (!req.tenantId) { 
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
@@ -85,9 +76,6 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// ----------------------------------------------------------------------------------
-// C. PUT /api/admin/vendedores/:id - Actualiza un vendedor de la empresa
-// ----------------------------------------------------------------------------------
 router.put('/:id', verifyToken, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });
@@ -132,9 +120,6 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 });
 
-// ----------------------------------------------------------------------------------
-// D. DELETE /api/admin/vendedores/:id - Elimina un vendedor de la empresa
-// ----------------------------------------------------------------------------------
 router.delete('/:id', verifyToken, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin en esta ruta.' });

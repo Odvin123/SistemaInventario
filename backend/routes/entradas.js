@@ -1,12 +1,9 @@
-// routes/entradas.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
 
-// ==================================================================================
-// 1. REGISTRAR ENTRADA MANUAL (ej: compra de inventario)
-// ==================================================================================
+
 router.post('/', verifyToken, async (req, res) => {
     if (!req.tenantId) {
         return res.status(403).json({ success: false, message: 'Acción no permitida para SuperAdmin.' });
@@ -34,7 +31,6 @@ router.post('/', verifyToken, async (req, res) => {
         for (const item of productos) {
             const { producto_id, cantidad } = item;
 
-            // Verificar que el producto existe y pertenece a la empresa
             const productoRes = await client.query(
                 'SELECT id, stock FROM productos WHERE id = $1 AND empresa_id = $2 FOR UPDATE',
                 [producto_id, empresaId]
@@ -87,20 +83,16 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// ==================================================================================
-// 2. LISTAR MOVIMIENTOS (con filtro por TIPO y fechas)
-// ==================================================================================
+
 router.get('/', verifyToken, async (req, res) => {
-    // ✅ Corrección clave: manejar tipo con mayúsculas y valor por defecto
     let { tipo, inicio, fin } = req.query;
-    tipo = (tipo || 'TODOS').toUpperCase(); // ← Asegura 'ENTRADA', 'SALIDA', etc.
+    tipo = (tipo || 'TODOS').toUpperCase(); 
     const empresaId = req.tenantId;
 
     if (!empresaId) {
         return res.status(403).json({ success: false, message: 'Acceso denegado.' });
     }
 
-    // Validar tipo
     if (!['ENTRADA', 'SALIDA', 'AJUSTE', 'TODOS'].includes(tipo)) {
         return res.status(400).json({ success: false, message: 'Tipo inválido. Use: ENTRADA, SALIDA, AJUSTE o TODOS.' });
     }
@@ -126,14 +118,12 @@ router.get('/', verifyToken, async (req, res) => {
     const params = [empresaId];
     let idx = 2;
 
-    // Filtro por tipo
     if (tipo !== 'TODOS') {
         queryText += ` AND m.tipo = $${idx}`;
         params.push(tipo);
         idx++;
     }
 
-    // Filtro por rango de fechas
     if (inicio && fin) {
         queryText += ` AND m.fecha::date BETWEEN $${idx} AND $${idx + 1}`;
         params.push(inicio, fin);

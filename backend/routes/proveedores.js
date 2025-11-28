@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../db'); 
 const { verifyToken } = require('../middleware/auth');
 
-// Listar Proveedores
 router.get('/', verifyToken, async (req, res) => {
     if (req.usuario.rol !== 'administrador' && req.usuario.rol !== 'super_admin') {
         return res.status(403).json({ success: false, message: 'Acción no permitida para este rol.' });

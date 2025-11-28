@@ -111,10 +111,12 @@
                     localStorage.setItem('token', result.token); 
                     localStorage.setItem('rol', result.rol);
                     localStorage.setItem('tenant_id', result.tenant_id);
+                    localStorage.setItem('nombre_empresa', result.nombre_empresa);
 
                  sessionStorage.setItem('authToken', result.token); 
                     sessionStorage.setItem('userRol', result.rol);
                     sessionStorage.setItem('tenantId', result.tenant_id);
+                    sessionStorage.setItem('nombre_empresa', result.nombre_empresa);
                     
                     if (result.necesitaCambioPw) {
                         alert("Por seguridad, debe establecer una nueva contraseña.");

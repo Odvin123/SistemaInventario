@@ -1,31 +1,25 @@
-// js/reporte_ventas.js
 const API_URL = 'http://localhost:4000/api';
 let token = localStorage.getItem('token');
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Validar autenticación
     if (!token) {
         alert('Sesión no válida. Redirigiendo al login...');
         window.location.href = 'login.html';
         return;
     }
 
-    // 2. Establecer fechas iniciales: desde inicio del mes hasta hoy
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     document.getElementById('fecha-inicio').valueAsDate = startOfMonth;
     document.getElementById('fecha-fin').valueAsDate = now;
 
-    // 3. Cargar todas las ventas al inicio
     loadVentas();
 
-    // 4. Event listeners para botones
     document.getElementById('btn-mostrar').addEventListener('click', handleFilter);
     document.getElementById('btn-refrescar').addEventListener('click', () => loadVentas());
 });
 
-// Formatear fecha a "dd/mm/yyyy hh:mm"
 function formatDate(dateString) {
     if (!dateString) return '—';
     const date = new Date(dateString);
@@ -56,7 +50,6 @@ function renderVentas(ventas) {
     ventas.forEach(venta => {
         totalAcumulado += parseFloat(venta.total);
 
-        // Formatear productos como lista legible
         const productosHTML = venta.detalles && venta.detalles.length 
             ? `<div class="productos-lista">${venta.detalles.map(d => 
                   `<div class="producto-item">
@@ -88,7 +81,6 @@ function renderVentas(ventas) {
     totalElement.textContent = `C$${totalAcumulado.toFixed(2)}`;
 }
 
-// Cargar ventas (todas o filtradas)
 async function loadVentas(fecha_inicio = null, fecha_fin = null) {
     const tbody = document.getElementById('ventas-tbody');
     tbody.innerHTML = '<tr><td colspan="10" class="loading">Cargando ventas...</td></tr>';
@@ -126,7 +118,6 @@ async function loadVentas(fecha_inicio = null, fecha_fin = null) {
     }
 }
 
-// Manejar el filtro por fechas
 function handleFilter() {
     const inicioInput = document.getElementById('fecha-inicio').value;
     const finInput = document.getElementById('fecha-fin').value;
@@ -136,7 +127,6 @@ function handleFilter() {
         return;
     }
 
-    // Validar que fecha fin >= fecha inicio
     const inicio = new Date(inicioInput);
     const fin = new Date(finInput);
     if (fin < inicio) {
@@ -144,7 +134,6 @@ function handleFilter() {
         return;
     }
 
-    // Formatear fechas como YYYY-MM-DD para el backend
     const inicioISO = inicio.toISOString().split('T')[0];
     const finISO = fin.toISOString().split('T')[0];
 
