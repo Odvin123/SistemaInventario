@@ -16,7 +16,10 @@
             border: 1px solid #ccc;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-        .header { text-align: center; margin-bottom: 12px; }
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
         .header h1 {
             font-size: 1.3rem;
             font-weight: 700;
@@ -27,9 +30,16 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.85rem;
-            margin: 4px 0;
+            margin-bottom: 5px;
         }
-        .label { font-weight: 600; color: #333; }
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        .info-value {
+            color: #1e293b;
+            font-weight: 500;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -37,25 +47,29 @@
             font-size: 0.85rem;
         }
         th {
-            background: #2563eb;
-            color: white;
-            padding: 6px 8px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: 5px;
             text-align: left;
             font-weight: 700;
+            color: #1e293b;
         }
         td {
-            padding: 6px 8px;
+            padding: 5px;
             border-bottom: 1px solid #eee;
+            color: #222;
         }
         .total-row {
             display: flex;
             justify-content: space-between;
             font-weight: bold;
             margin: 10px 0;
-            padding-top: 8px;
+            padding: 5px 0;
             border-top: 1px solid #ddd;
         }
-        .cambio { color: #10b981; }
+        .cambio {
+            color: #10b981;
+        }
         .footer {
             text-align: center;
             font-size: 0.8rem;
@@ -72,36 +86,38 @@
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-weight: 700;
+            border-radius: 8px;
             cursor: pointer;
+            text-align: center;
+            font-weight: 700;
             transition: all 0.2s;
         }
         .download-btn:hover {
             background: linear-gradient(135deg, #1d4ed8, #1e40af);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 id="ticket-company">CARGANDO...</h1>
+        <h1>INVENSAAS</h1>
+        <div class="subtitle">Punto de Venta Automático</div>
     </div>
 
     <div class="info-row">
-        <span class="label">Folio:</span>
-        <span id="ticket-folio">#--</span>
+        <span class="info-label">Folio:</span>
+        <span id="ticket-folio">--</span>
     </div>
     <div class="info-row">
-        <span class="label">Fecha/Hora:</span>
+        <span class="info-label">Fecha/Hora:</span>
         <span id="ticket-fecha">--</span>
     </div>
     <div class="info-row">
-        <span class="label">Cliente:</span>
+        <span class="info-label">Cliente:</span>
         <span id="ticket-cliente">--</span>
     </div>
     <div class="info-row">
-        <span class="label">Vendedor:</span>
+        <span class="info-label">Vendedor:</span>
         <span id="ticket-vendedor">--</span>
     </div>
 
@@ -111,12 +127,12 @@
                 <th>CANT.</th>
                 <th>CÓDIGO</th>
                 <th>DESCRIPCIÓN</th>
-                <th style="text-align: right;">PRECIO</th>
-                <th style="text-align: right;">TOTAL</th>
+                <th style="text-align: right;">PRECIO UNI.</th>
+                <th style="text-align: right;">IMPORTE</th>
             </tr>
         </thead>
         <tbody id="ticket-items">
-            <tr><td colspan="5" style="text-align: center;">Cargando...</td></tr>
+            <!-- Productos dinámicos -->
         </tbody>
     </table>
 
@@ -124,106 +140,60 @@
         <span>Total:</span>
         <span id="ticket-total">C$0.00</span>
     </div>
+
     <div class="total-row cambio">
         <span>Cambio:</span>
         <span id="ticket-cambio">C$0.00</span>
     </div>
 
+    <button class="download-btn" onclick="downloadTicket()">📥 Descargar Ticket</button>
+
     <div class="footer">
         ¡Gracias por su compra!
     </div>
 
-    <button class="download-btn" onclick="downloadTicket()">📥 Descargar Ticket</button>
-
     <script>
-        // ✅ Recuperar datos desde sessionStorage
+        // Recuperar datos desde sessionStorage
         const ticketData = JSON.parse(sessionStorage.getItem('ticketData'));
         if (!ticketData) {
-            document.body.innerHTML = `
-                <div style="text-align:center; padding:30px; color:#dc3545;">
-                    <h2>❌ Ticket no disponible</h2>
-                    <p>La venta no se registró correctamente.</p>
-                </div>
-            `;
-            throw new Error('No ticket data');
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;color:red;">❌ Ticket no disponible.</div>';
+            throw new Error('No se encontraron datos del ticket.');
         }
 
-        // ✅ Rellenar encabezado
-        document.getElementById('ticket-company').textContent = ticketData.nombreEmpresa;
-        document.getElementById('ticket-folio').textContent = `#${ticketData.folio}`;
+        // Llenar cabecera
+        document.getElementById('ticket-folio').textContent = '#' + ticketData.folio;
         document.getElementById('ticket-fecha').textContent = ticketData.fechaHora;
         document.getElementById('ticket-cliente').textContent = ticketData.clienteNombre;
         document.getElementById('ticket-vendedor').textContent = ticketData.vendedorNombre;
 
-        // ✅ Rellenar productos
-        const tbody = document.getElementById('ticket-items');
-        tbody.innerHTML = ''; // Limpiar
-
-        if (ticketData.productos && ticketData.productos.length > 0) {
-            ticketData.productos.forEach(p => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${p.cantidad || 1}</td>
-                    <td>${p.id || p.clave || '—'}</td>
-                    <td>${p.descripcion || 'Sin descripción'}</td>
-                    <td style="text-align: right;">C$${(p.precio || 0).toFixed(2)}</td>
-                    <td style="text-align: right;">C$${(p.importe || p.cantidad * p.precio || 0).toFixed(2)}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">Sin productos</td></tr>';
-        }
-
-        // ✅ Rellenar totales
-        document.getElementById('ticket-total').textContent = `C$${(ticketData.total || 0).toFixed(2)}`;
-        document.getElementById('ticket-cambio').textContent = `C$${(ticketData.cambio || 0).toFixed(2)}`;
-
-        // ✅ Función de descarga
-        function downloadTicket() {
-            const content = `
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Ticket #${ticketData.folio}</title>
-                    <style>
-                        body { font-family: 'Lato', sans-serif; max-width: 320px; margin: 0 auto; padding: 15px; }
-                        table { width: 100%; border-collapse: collapse; }
-                        th, td { padding: 5px; border: 1px solid #ccc; }
-                        th { background: #2563eb; color: white; }
-                        .footer { margin-top: 20px; text-align: center; font-size: 0.8rem; }
-                    </style>
-                </head>
-                <body>
-                    <div style="text-align:center;"><h2>${ticketData.nombreEmpresa}</h2></div>
-                    <div>Folio: #${ticketData.folio}</div>
-                    <div>Fecha: ${ticketData.fechaHora}</div>
-                    <div>Cliente: ${ticketData.clienteNombre}</div>
-                    <div>Vendedor: ${ticketData.vendedorNombre}</div>
-                    <table>
-                        <tr><th>CANT.</th><th>CÓDIGO</th><th>DESCRIPCIÓN</th><th>PRECIO</th><th>TOTAL</th></tr>
-                        ${ticketData.productos?.map(p => 
-                            `<tr>
-                                <td>${p.cantidad}</td>
-                                <td>${p.id}</td>
-                                <td>${p.descripcion}</td>
-                                <td>C$${p.precio.toFixed(2)}</td>
-                                <td>C$${p.importe.toFixed(2)}</td>
-                            </tr>`
-                        ).join('') || '<tr><td colspan="5">Sin productos</td></tr>'}
-                    </table>
-                    <div style="margin-top:10px;">Total: C$${ticketData.total.toFixed(2)}</div>
-                    <div>Cambio: C$${ticketData.cambio.toFixed(2)}</div>
-                    <div class="footer">¡Gracias por su compra!</div>
-                </body>
-                </html>
+        // Llenar productos
+        const itemsBody = document.getElementById('ticket-items');
+        ticketData.productos.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.cantidad}</td>
+                <td>${item.clave || item.id}</td>
+                <td>${item.descripcion}</td>
+                <td style="text-align: right;">C$${item.precio.toFixed(2)}</td>
+                <td style="text-align: right;">C$${item.importe.toFixed(2)}</td>
             `;
+            itemsBody.appendChild(row);
+        });
+
+        // Totales
+        document.getElementById('ticket-total').textContent = `C$${ticketData.total.toFixed(2)}`;
+        document.getElementById('ticket-cambio').textContent = `C$${ticketData.cambio.toFixed(2)}`;
+
+        // Función de descarga
+        function downloadTicket() {
+            const ticketContent = document.documentElement.outerHTML;
             
-            const blob = new Blob([content], { type: 'text/html' });
+            // Crear Blob y enlace de descarga
+            const blob = new Blob([ticketContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ticket_${ticketData.folio}.html`;
+            a.download = `ticket_venta_${ticketData.folio}.html`;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
@@ -231,6 +201,15 @@
                 URL.revokeObjectURL(url);
             }, 100);
         }
+
+        // Imprimir automáticamente (opcional)
+        window.addEventListener('load', () => {
+            // Descomenta si quieres imprimir al abrir
+            // setTimeout(() => {
+            //     window.print();
+            //     setTimeout(() => window.close(), 1000);
+            // }, 300);
+        });
     </script>
 </body>
 </html>
