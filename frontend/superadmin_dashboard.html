@@ -154,7 +154,6 @@ function renderEmpresas(empresas) {
                     title="Restablecer la contraseña del Administrador y forzar cambio.">
                     🔒 Reset Contraseña
                 </button>
-                <button onclick="sendInvite('${empresa.tenant_id}')" ${isSuperAdmin ? 'disabled' : ''}>🔗 Invitar</button>
                 <button onclick="gestionarEmpresa('${empresa.tenant_id}')">⚙️ Gestionar</button>
                 <button 
                     class="btn-delete"
