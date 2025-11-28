@@ -1,6 +1,6 @@
 // js/vendedores.js
 
-const API_URL = 'http://localhost:4000/api';
+const API_URL = 'https://raw-philipa-odvin123-8a860263.koyeb.app/api';
 let token = localStorage.getItem('token');
 const DEFAULT_VENDEDOR = 'administrador';
 let vendedoresCache = [];
