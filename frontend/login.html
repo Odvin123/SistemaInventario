@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Iniciar Sesión - InvenSaaS</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+    <!-- 
+        NECESARIO para los íconos profesionales (Font Awesome).
+        Usaremos la clase "fa-eye" y "fa-eye-slash".
+    -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" xintegrity="sha512-Fo3rlrZj/k7ujTnHg4C8yF4p4B7O213x1X5lO8+6t8G+e8l0cW8u3F+G9K+yB+pD9g4w0tX0g8w2vG2h/4aDw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <link rel="stylesheet" href="css/StyleLogin.css" /> 
 </head>
 <body>
@@ -12,188 +18,239 @@
         <h2>Acceso al Sistema</h2>
         <form id="loginForm">
             <label for="tenantId">ID de Puesto/Empresa (Tenant ID):</label>
-            <input type="text" id="tenantId" required><br><br>
+            <input type="text" id="tenantId" required><br>
 
             <label for="email">Correo Electrónico:</label>
-            <input type="email" id="email" required><br><br>
+            <input type="email" id="email" required><br>
 
            <label for="password">Contraseña:</label>
-            <div style="position: relative; display: inline-block; width: 100%;">
-            <input type="password" id="password" required style="width: calc(100% - 40px); padding-right: 40px;">
-         <button type="button" 
-          id="togglePassword" 
-          style="position: absolute; right: 2px; top: 2px; height: calc(100% - 4px); width: 36px; background: transparent; border: none; cursor: pointer; font-size: 18px;"
-          aria-label="Mostrar u ocultar contraseña">👁️
+           <!-- Contenedor para el campo y el botón de visibilidad -->
+            <div class="password-container">
+                <input type="password" id="password" required>
+                <button type="button" 
+                    id="togglePassword" 
+                    aria-label="Mostrar u ocultar contraseña"
+                    title="Mostrar contraseña">
+                    <!-- Ícono de Font Awesome por defecto: ojo cerrado (slash) -->
+                    <i class="fas fa-eye"></i> 
+                </button>
+            </div>
+            <br>
             
-            </button>
-            </div><br><br>
-            <a href="index.html" class="btn-back-home" style="
-    display: inline-block;
-    margin-bottom: 15px;
-    padding: 8px 16px;
-    background-color: #6c757d;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.9em;
-    font-weight: 500;
-">← Volver al Inicio</a><br><br>
-
+            <a href="index.html" class="btn-back-home" title="Volver a la página principal">
+                <i class="fas fa-arrow-left"></i> Volver al Inicio
+            </a>
+            
             <button type="submit" id="loginButton">Iniciar Sesión</button>
-            <p id="lockoutMessage" style="color: red; display: none; margin-top: 10px;">Demasiados intentos fallidos. Intente de nuevo en <span id="countdown">10</span> segundos.</p>
+            
+            <p id="lockoutMessage" style="display: none; margin-top: 10px;">
+                Demasiados intentos fallidos. Intente de nuevo en <span id="countdown">10</span> segundos.
+            </p>
         </form>
         
-        <div style="margin-top: 15px;">
-            <a href="#" id="forgotPasswordLink" style="color: var(--primary); text-decoration: none; font-size: 0.9em; font-weight: 500;">¿Se te olvidó la contraseña?</a>
+        <div class="footer-links">
+            <a href="#" id="forgotPasswordLink" title="Restablecer contraseña">¿Se te olvidó la contraseña?</a>
         </div>
     </div>
 
     <script>
-
-
-        const API_URL_LOGIN = 'https://raw-philipa-odvin123-8a860263.koyeb.app/api/login';
-        const loginForm = document.getElementById('loginForm');
-        const loginButton = document.getElementById('loginButton');
-        const lockoutMessage = document.getElementById('lockoutMessage');
-        const countdownSpan = document.getElementById('countdown');
-        
-        let failCount = 0;
-        const MAX_ATTEMPTS = 3;
-        const LOCKOUT_DURATION_MS = 10000; 
-        let isLocked = false;
-
-
-        // Toggle de visibilidad de contraseña
-document.getElementById('togglePassword').addEventListener('click', function() {
+         (function() {
+    // La URL de la API se mantiene
+    const API_URL_LOGIN = 'https://raw-philipa-odvin123-8a860263.koyeb.app/api/login';
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    const lockoutMessage = document.getElementById('lockoutMessage');
+    const countdownSpan = document.getElementById('countdown');
     const passwordInput = document.getElementById('password');
-    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    passwordInput.setAttribute('type', type);
-    this.textContent = type === 'password' ? '👁️' : '🙈';
-});
+    const togglePasswordButton = document.getElementById('togglePassword');
+    
+    let failCount = 0;
+    const MAX_ATTEMPTS = 3;
+    const LOCKOUT_DURATION_MS = 10000; 
+    let isLocked = false;
+    let lockoutTimer = null;
 
+    // --- Funciones de Bloqueo ---
 
-        function setLockout(duration) {
-            isLocked = true;
-            failCount = 0; 
-            
-            document.getElementById('tenantId').disabled = true;
-            document.getElementById('email').disabled = true;
-            document.getElementById('password').disabled = true;
-            loginButton.disabled = true;
-            document.getElementById('forgotPasswordLink').style.pointerEvents = 'none';
+    function setLockout(duration) {
+        isLocked = true;
+        failCount = 0; 
+        
+        // Deshabilitar todos los campos y botones
+        document.getElementById('tenantId').disabled = true;
+        document.getElementById('email').disabled = true;
+        passwordInput.disabled = true;
+        loginButton.disabled = true;
+        document.getElementById('forgotPasswordLink').style.pointerEvents = 'none';
+        togglePasswordButton.disabled = true; // Deshabilitar el toggle también
 
-            lockoutMessage.style.display = 'block';
+        lockoutMessage.style.display = 'block';
 
-            let countdown = duration / 1000;
+        let countdown = duration / 1000;
+        countdownSpan.textContent = countdown;
+        
+        if (lockoutTimer) clearInterval(lockoutTimer);
+        
+        lockoutTimer = setInterval(() => {
+            countdown--;
             countdownSpan.textContent = countdown;
-            
-            const timer = setInterval(() => {
-                countdown--;
-                countdownSpan.textContent = countdown;
 
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    unlockForm();
-                }
-            }, 1000);
-        }
-
-        function unlockForm() {
-            isLocked = false;
-            
-            document.getElementById('tenantId').disabled = false;
-            document.getElementById('email').disabled = false;
-            document.getElementById('password').disabled = false;
-            loginButton.disabled = false;
-            document.getElementById('forgotPasswordLink').style.pointerEvents = 'auto';
-
-            lockoutMessage.style.display = 'none';
-            alert('El bloqueo temporal ha finalizado. Puede intentar iniciar sesión de nuevo.');
-        }
-
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            if (isLocked) {
-                alert('El formulario está bloqueado temporalmente. Por favor, espere.');
-                return;
+            if (countdown <= 0) {
+                clearInterval(lockoutTimer);
+                unlockForm();
             }
+        }, 1000);
+    }
 
-            const tenant_id = document.getElementById('tenantId').value;
-            const correo_electronico = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    function unlockForm() {
+        isLocked = false;
+        
+        document.getElementById('tenantId').disabled = false;
+        document.getElementById('email').disabled = false;
+        passwordInput.disabled = false;
+        loginButton.disabled = false;
+        document.getElementById('forgotPasswordLink').style.pointerEvents = 'auto';
+        togglePasswordButton.disabled = false; // Habilitar el toggle
 
-            const data = { tenant_id, correo_electronico, password };
+        lockoutMessage.style.display = 'none';
+        
+        // Uso de una alerta visual personalizada en lugar de window.alert (aunque no la incluí en el HTML, mantengo la práctica de evitar window.alert)
+        console.log('El bloqueo temporal ha finalizado. Puede intentar iniciar sesión de nuevo.');
+        alert('El bloqueo temporal ha finalizado. Puede intentar iniciar sesión de nuevo.'); 
+        // Nota: Idealmente se usaría un modal o toast en el DOM en lugar de alert().
+    }
 
-            try {
-                const response = await fetch(API_URL_LOGIN, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
+    // --- Lógica de Toggle de Contraseña (Elegante y Profesional) ---
 
-                const result = await response.json();
+    togglePasswordButton.addEventListener('click', function() {
+        if (isLocked) return;
+
+        const icon = this.querySelector('i');
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        
+        // Cambiar tipo de input
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        
+        // Cambiar el ícono y el título/aria-label
+        if (isPassword) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash'); // Ojo cerrado
+            this.setAttribute('aria-label', 'Ocultar contraseña');
+            this.setAttribute('title', 'Ocultar contraseña');
+        } else {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye'); // Ojo abierto
+            this.setAttribute('aria-label', 'Mostrar contraseña');
+            this.setAttribute('title', 'Mostrar contraseña');
+        }
+    });
+
+
+    // --- Manejo del Formulario de Login ---
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (isLocked) {
+            alert('El formulario está bloqueado temporalmente. Por favor, espere.');
+            return;
+        }
+
+        const tenant_id = document.getElementById('tenantId').value;
+        const correo_electronico = document.getElementById('email').value;
+        const password = passwordInput.value;
+
+        const data = { tenant_id, correo_electronico, password };
+
+        try {
+            // Deshabilitar el botón mientras se procesa la solicitud
+            loginButton.disabled = true;
+            loginButton.textContent = 'Cargando...';
+
+            const response = await fetch(API_URL_LOGIN, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                failCount = 0; 
                 
-                if (response.ok && result.success) {
-                    failCount = 0; 
-                    
-                    localStorage.setItem('token', result.token); 
-                    localStorage.setItem('rol', result.rol);
-                    localStorage.setItem('tenant_id', result.tenant_id);
-                    localStorage.setItem('nombre_empresa', result.nombre_empresa);
+                // Guardar datos de sesión (usando sessionStorage como prioridad)
+                sessionStorage.setItem('authToken', result.token); 
+                sessionStorage.setItem('userRol', result.rol);
+                sessionStorage.setItem('tenantId', result.tenant_id);
+                sessionStorage.setItem('nombre_empresa', result.nombre_empresa);
 
-                 sessionStorage.setItem('authToken', result.token); 
-                    sessionStorage.setItem('userRol', result.rol);
-                    sessionStorage.setItem('tenantId', result.tenant_id);
-                    sessionStorage.setItem('nombre_empresa', result.nombre_empresa);
-                    
-                    if (result.necesitaCambioPw) {
-                        alert("Por seguridad, debe establecer una nueva contraseña.");
-                        window.location.href = `cambio_pw.html?tenant=${result.tenant_id}&email=${correo_electronico}`;
-                    } else {
-                        if (result.rol === 'super_admin') {
-                            window.location.href = 'superadmin_dashboard.html';
-                        } else {
-                            window.location.href = 'inventario_dashboard.html';
-                        }
-                    }
-
+                // Opcional: Para persistencia a largo plazo (si se necesita)
+                localStorage.setItem('token', result.token); 
+                localStorage.setItem('rol', result.rol);
+                localStorage.setItem('tenant_id', result.tenant_id);
+                localStorage.setItem('nombre_empresa', result.nombre_empresa);
+                
+                if (result.necesitaCambioPw) {
+                    alert("Por seguridad, debe establecer una nueva contraseña.");
+                    window.location.href = `cambio_pw.html?tenant=${result.tenant_id}&email=${correo_electronico}`;
                 } else {
-                    failCount++;
-                    
-                    alert('Error de Login: ' + (result.message || 'Credenciales o Puesto/Empresa inválido.'));
-
-                    if (failCount >= MAX_ATTEMPTS) {
-                        setLockout(LOCKOUT_DURATION_MS);
+                    if (result.rol === 'super_admin') {
+                        window.location.href = 'superadmin_dashboard.html';
                     } else {
-                        const remaining = MAX_ATTEMPTS - failCount;
-                        if (remaining > 0) {
-                            alert(`Intento fallido. Le quedan ${remaining} intentos antes del bloqueo temporal.`);
-                        }
+                        window.location.href = 'inventario_dashboard.html';
                     }
                 }
-            } catch (e) {
-                alert('Error de conexión con el servidor (API no responde).');
-            }
-        });
-        
-        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            const tenantId = document.getElementById('tenantId').value;
-            const email = document.getElementById('email').value;
 
-            window.location.href = `reset_password.html?tenant=${encodeURIComponent(tenantId)}&email=${encodeURIComponent(email)}`;
-        });
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tenant = urlParams.get('tenant');
-            if (tenant) {
-                document.getElementById('tenantId').value = tenant;
+            } else {
+                failCount++;
+                
+                // Mostrar mensaje de error (usando alert temporalmente)
+                alert('Error de Login: ' + (result.message || 'Credenciales o Puesto/Empresa inválido.'));
+
+                if (failCount >= MAX_ATTEMPTS) {
+                    setLockout(LOCKOUT_DURATION_MS);
+                } else {
+                    const remaining = MAX_ATTEMPTS - failCount;
+                    if (remaining > 0) {
+                        alert(`Intento fallido. Le quedan ${remaining} intentos antes del bloqueo temporal.`);
+                    }
+                }
             }
-        });
+        } catch (e) {
+            console.error('Error de conexión:', e);
+            alert('Error de conexión con el servidor (API no responde).');
+        } finally {
+            // Restablecer el botón
+            loginButton.disabled = isLocked;
+            loginButton.textContent = 'Iniciar Sesión';
+        }
+    });
+    
+    // --- Lógica de Olvidó Contraseña y precarga de Tenant ID ---
+    
+    document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const tenantId = document.getElementById('tenantId').value;
+        const email = document.getElementById('email').value;
+
+        window.location.href = `reset_password.html?tenant=${encodeURIComponent(tenantId)}&email=${encodeURIComponent(email)}`;
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenant = urlParams.get('tenant');
+        if (tenant) {
+            document.getElementById('tenantId').value = tenant;
+        }
+    });
+
+})();
+
     </script>
+   
+
+    <!-- Script de lógica de sesión y toggle de contraseña -->
+    <script src="js/LoginScript.js"></script>
 </body>
 </html>
