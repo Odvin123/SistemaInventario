@@ -7,582 +7,124 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/punto_de_venta.css" />
     <style>
-        /* Estilos adicionales para el nuevo diseño */
-        .pos-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 24px;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .header-left .pos-logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #2563eb, #0ea5e9);
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        .header-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-info {
-            font-size: 0.9rem;
-            color: #1e293b;
-            font-weight: 600;
-        }
-        .close-btn {
-            background: #ef4444;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .close-btn:hover {
-            background: #dc2626;
-            transform: scale(1.05);
-        }
-
-        /* Menú rápido con estilo moderno */
-        .quick-menu {
-            display: flex;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            flex-wrap: wrap;
-        }
-        .menu-btn {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #1e293b;
-            transition: var(--transition);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .menu-btn:hover {
-            background: #f1f5f9;
-            color: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
-        }
-
-        /* Área de venta */
-        .sale-input-area {
-            padding: 16px 24px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .sale-input-area label {
-            font-weight: 700;
-            color: #1e293b;
-            font-size: 0.9rem;
-            margin-right: 8px;
-        }
-        .search-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .barcode-input {
-            flex: 1;
-            min-width: 250px;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-family: 'Lato', sans-serif;
-            transition: var(--transition);
-        }
-        .search-icon {
-            padding: 10px 16px;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 40px;
-        }
-        .search-icon:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
-        }
-        .factura-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-            color: #64748b;
-            margin-left: 16px;
-        }
-        .factura-checkbox input {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
-        /* Tabla de venta */
-        .pos-main {
-            display: flex;
-            flex-grow: 1;
-            gap: 20px;
-            padding: 0 24px;
-            overflow: hidden;
-        }
-        .pos-table-container {
-            flex-grow: 1;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        .pos-table {
-            width: 100%;
-            border-collapse: collapse;
-            display: block;
-        }
-        .pos-table thead,
-        .pos-table tbody tr {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-        }
-        .pos-table thead {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-        }
-        .pos-table th {
-            padding: 12px 16px;
-            text-align: left;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .pos-table tbody {
-            display: block;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            flex-grow: 1;
-            max-height: 350px;
-        }
-        .pos-table tr {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-        }
-        .pos-table td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 0.95rem;
-            color: #1e293b;
-        }
-        .pos-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Panel de acciones */
-        .pos-actions-panel {
-            width: 320px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .action-btns {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .action-btn {
-            padding: 10px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.9rem;
-            flex-grow: 1;
-            transition: var(--transition);
-            text-align: center;
-        }
-        .btn-eliminar,
-        .btn-borrar {
-            background-color: #fee2e2;
-            color: #dc3544;
-        }
-        .btn-eliminar:hover,
-        .btn-borrar:hover {
-            background-color: #fecaca;
-            transform: translateY(-1px);
-        }
-        .cobrar-area {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-        }
-        .cobrar-btn {
-            background: linear-gradient(135deg, #f59e0b, #eab308);
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 700;
-            padding: 14px 24px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 100%;
-            text-align: center;
-            transition: var(--transition);
-            box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
-        }
-        .cobrar-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(234, 179, 8, 0.4);
-        }
-        .total-display {
-            background: linear-gradient(135deg, #fffbeb, #fef3c7);
-            color: #b45309;
-            font-size: 1.8rem;
-            font-weight: 700;
-            padding: 14px 20px;
-            border-radius: 12px;
-            width: 100%;
-            text-align: right;
-            box-shadow: 0 4px 8px rgba(251, 191, 36, 0.2);
-            border: 2px solid #fcd34d;
-        }
-
-        /* Footer */
-        .pos-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            background: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            font-size: 0.9rem;
-            color: #64748b;
-        }
-        .footer-info {
-            display: flex;
-            gap: 20px;
-        }
-        .footer-info span {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .footer-data {
-            font-weight: 700;
-            color: #1e293b;
-        }
-        .date-time-box {
-            display: flex;
-            gap: 12px;
-        }
-        .date-time-box span {
-            padding: 6px 12px;
-            background-color: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .date-time-box span::before {
+        .footer-data[style*="cursor: pointer"] {
+            text-decoration: underline;
             font-weight: bold;
         }
-
-        /* Modales */
         .modal {
             display: none;
             position: fixed;
-            z-index: 2000;
+            z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(2px);
+            background-color: rgba(0,0,0,0.5);
         }
         .modal-content {
-            background-color: #ffffff;
+            background: white;
             margin: 5% auto;
-            padding: 24px;
-            border-radius: 16px;
+            padding: 20px;
+            border-radius: 8px;
             width: 90%;
-            max-width: 700px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-            transform: scale(0.95);
-            opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        .modal[style*="display: block"] .modal-content {
-            transform: scale(1);
-            opacity: 1;
+            max-width: 600px;
         }
         .close {
-            position: absolute;
-            top: 16px;
-            right: 24px;
-            color: #aaa;
-            font-size: 32px;
+            float: right;
+            font-size: 28px;
             font-weight: bold;
             cursor: pointer;
-            transition: var(--transition);
         }
-        .close:hover {
-            color: #1e293b;
-        }
-        .modal-content h3 {
-            margin-bottom: 24px;
-            color: #1e293b;
-            font-size: 1.5rem;
-            text-align: center;
-        }
-        .modal-content label {
-            display: block;
-            margin: 16px 0 8px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        .modal-content input,
-        .modal-content textarea,
-        .modal-content select {
+        .pos-table {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            font-family: 'Lato', sans-serif;
-            font-size: 1rem;
-            transition: var(--transition);
+            border-collapse: collapse;
         }
-        .modal-content input:focus,
-        .modal-content select:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        .pos-table th,
+        .pos-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
         }
-        .btn-add-product {
-            background: linear-gradient(135deg, #10b981, #059669);
+        .pos-table th {
+            background-color: #f8f9fa;
+        }
+        .btn-primary {
+            background-color: #007bff;
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: var(--transition);
-            width: 100%;
-            margin-top: 16px;
-        }
-        .btn-add-product:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
-        }
-        .btn-edit {
-            background: linear-gradient(135deg, #f59e0b, #eab308);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: var(--transition);
-        }
-        .btn-edit:hover {
-            transform: scale(1.05);
-        }
-
-        /* Botones de acción en tablas */
-        .btn-add-product, .btn-edit, .btn-eliminar {
-            font-size: 0.85rem;
             padding: 6px 12px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1100px) {
-            .pos-window {
-                height: auto;
-                max-height: 95vh;
-            }
-            .pos-main {
-                flex-direction: column;
-            }
-            .pos-actions-panel {
-                width: 100%;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: flex-end;
-            }
-            .cobrar-area {
-                flex-direction: row;
-                align-items: center;
-                width: 100%;
-                justify-content: flex-end;
-            }
-            .total-display {
-                width: auto;
-                min-width: 200px;
-                text-align: center;
-            }
-        }
-        @media (max-width: 768px) {
-            .pos-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 16px;
-            }
-            .pos-logo {
-                order: -1;
-            }
-            .folio-box,
-            .pos-header > div:last-child {
-                align-self: flex-end;
-            }
-            .sale-input-area {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .barcode-input {
-                min-width: auto;
-                width: 100%;
-            }
-            .quick-menu {
-                justify-content: center;
-            }
-            .pos-actions-panel {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 16px;
-            }
-            .action-btns {
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .action-btn {
-                flex: 1 1 45%;
-                min-width: 120px;
-            }
-            .cobrar-area {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-            .cobrar-btn,
-            .total-display {
-                width: 100%;
-                text-align: center;
-            }
-            .total-display {
-                font-size: 1.6rem;
-                padding: 12px;
-            }
-            .pos-footer {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-            .date-time-box {
-                justify-content: space-between;
-            }
-            .factura-checkbox {
-                justify-content: center;
-            }
-            .pos-table-container {
-                min-height: 200px;
-            }
-            .pos-table tbody {
-                max-height: 250px;
-                overflow-y: auto;
-            }
-            .pos-main {
-                overflow: auto;
-            }
-            .pos-window {
-                max-height: 100vh;
-                height: auto;
-            }
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
+<!-- Para generar PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <body>
     <main class="pos-window">
-        <!-- Encabezado -->
         <header class="pos-header">
-            <div class="header-left">
-                <div class="pos-logo">INV</div>
-                <div class="header-title">Punto de Venta</div>
+            <div id="company-logo" class="pos-logo">
+                Área para Logo
             </div>
-            <div class="header-right">
-                <div class="user-info">Bienvenido Administrador</div>
-                <a href="inventario_dashboard.html" class="close-btn" aria-label="Regresar al Panel de Inventario">✖️</a>
-            </div>
+           <div class="pos-title-area" style="text-align: left; flex: 1; padding-left: 20px;">
+    <h1 id="company-name" class="pos-title" style="margin: 0; font-size: 1.6rem; color: #1e293b;">
+        Bienvenido  <span id="empresa-nombre"> </span>
+    </h1>
+    <p id="tenant-display" class="pos-welcome" style="margin: 5px 0 0; font-size: 0.95rem; color: #64748b;">
+        Puesto: <strong><span id="empresa-tenant">—</span></strong>
+    </p>
+</div>
+
+           <a href="inventario_dashboard.html" class="close-btn" aria-label="Regresar al Panel de Inventario" title="Regresar al Panel">
+    &#x2715;
+</a>
+
+<style>
+.close-btn {
+    background: #ef4444;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+    margin-right: 15px;
+}
+.close-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+</style>
         </header>
 
-        <!-- Menú Rápido -->
-        <nav class="quick-menu">
-            <button class="menu-btn" onclick="openWindow('vendedores.html')">Vendedores (F2)</button>
-            <button class="menu-btn" onclick="openWindow('clientes.html')">Clientes (F3)</button>
-            <button class="menu-btn" onclick="handleCorteCaja()">Corte caja (F6)</button>
-            <button class="menu-btn" onclick="handleCancelarNV()">Cancelar NV (F9)</button>
+        <nav class="quick-menu" aria-label="Menú Rápido de POS">
+            <button class="menu-btn" onclick="openWindow('vendedores.html')">Vendedores (<kbd>F2</kbd>)</button>
+            <button class="menu-btn" onclick="openWindow('clientes.html')">Clientes (<kbd>F3</kbd>)</button>
+            <button class="menu-btn" onclick="handleCorteCaja()">Corte caja (<kbd>F6</kbd>)</button>
+            <button class="menu-btn" onclick="handleCancelarNV()">Cancelar NV (<kbd>F9</kbd>)</button>
         </nav>
 
-        <!-- Área de entrada de venta -->
         <section class="sale-input-area">
             <label for="barcode-input">VENTA DE PRODUCTOS / SERVICIOS</label>
-            <div class="search-container">
+            <div style="display: flex; align-items: center;">
                 <input type="text" id="barcode-input" class="barcode-input" placeholder="Escanear Código o Buscar Producto">
                 <button class="search-icon" aria-label="Buscar producto" onclick="openMovimientoVentasModal()">🔍</button> 
             </div>
+            
             <div class="factura-checkbox">
                 <input type="checkbox" id="check-factura">
                 <label for="check-factura">Factura</label>
             </div>
         </section>
 
-        <!-- Cuerpo principal -->
         <div class="pos-main">
             <div class="pos-table-container">
                 <table class="pos-table" aria-label="Detalle de productos en la venta actual">
@@ -603,23 +145,39 @@
 
             <div class="pos-actions-panel">
                 <div class="action-btns">
-                    <button class="action-btn btn-eliminar" onclick="removeItemFromSale()">Eliminar (Supr)</button>
-                    <button class="action-btn btn-borrar" onclick="clearSale()">Borrar (F7)</button>
+                    <button class="action-btn btn-eliminar" onclick="removeItemFromSale()">Eliminar (<kbd>Supr</kbd>)</button>
+                    <button class="action-btn btn-borrar" onclick="clearSale()">Borrar (<kbd>F7</kbd>)</button>
                 </div>
+                
                 <div class="cobrar-area">
                     <button class="cobrar-btn" onclick="handleCobrar()">
-                        Cobrar (F8)
+                        Cobrar (<kbd>F8</kbd>)
                     </button>
-                    <div id="total-amount" class="total-display">C$0.00</div>
+                    <div id="total-amount" class="total-display" role="status" aria-live="polite">
+                        C$0.00 
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
+        
         <footer class="pos-footer">
             <div class="footer-info">
-                <span>Cliente: <span class="footer-data" id="footer-cliente" ondblclick="openClienteSelectionModal()" style="cursor: pointer; text-decoration: underline; font-weight: bold;">PUBLICO EN GENERAL</span></span> 
-                <span>Vendedor: <span class="footer-data" id="footer-vendedor" ondblclick="openVendedorSelectionModal()" style="cursor: pointer; text-decoration: underline; font-weight: bold;">MOSTRADOR</span></span>
+                
+                <span>Cliente: 
+                    <span class="footer-data" id="footer-cliente" 
+                          ondblclick="openClienteSelectionModal()" 
+                          style="cursor: pointer; text-decoration: underline; font-weight: bold;">
+                        PUBLICO EN GENERAL
+                    </span>
+                </span> 
+                
+                <span>Vendedor: 
+                    <span class="footer-data" id="footer-vendedor" 
+                          ondblclick="openVendedorSelectionModal()" 
+                          style="cursor: pointer; text-decoration: underline; font-weight: bold;">
+                        MOSTRADOR
+                    </span>
+                </span>
             </div>
             <div class="date-time-box">
                 <time id="current-date">--</time>
@@ -628,7 +186,7 @@
         </footer>
     </main>
 
-    <!-- Modales -->
+    <!-- Modal de Producto -->
     <div id="movimientoVentasModal" class="modal" role="dialog" aria-labelledby="movimiento-title" aria-modal="true">
         <div class="modal-content" style="max-width: 700px;">
             <button class="close" aria-label="Cerrar" onclick="closeMovimientoVentasModal()">&times;</button>
@@ -638,11 +196,13 @@
                 <select id="clasificacion" required onchange="filterProductsByClasificacion()">
                     <option value="TODOS">TODOS</option> 
                 </select>
+                
                 <label for="producto_nombre">Producto:</label>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <input type="text" id="producto_nombre" placeholder="Nombre o Descripción del Producto" disabled aria-readonly="true">
                     <button type="button" class="btn-edit" aria-label="Abrir buscador de productos" onclick="openBusquedaProductoModal()" style="padding: 10px;">🔍</button>
                 </div>
+                
                 <div style="display: flex; gap: 20px;">
                     <div style="flex: 1;">
                         <label for="cantidad_venta">Cantidad a Vender:</label>
@@ -657,6 +217,7 @@
                         <input type="text" id="precio_unitario" disabled style="background-color: #f1f1f1;" value="C$0.00">
                     </div>
                 </div>
+                
                 <input type="hidden" id="selected_product_id">
                 <input type="hidden" id="selected_product_clave">
                 <button type="submit" class="btn-add-product" style="width: 100%; margin-top: 15px;">Añadir a la Venta</button>
@@ -664,11 +225,13 @@
         </div>
     </div>
 
+    <!-- Modal de Búsqueda de Producto -->
     <div id="busquedaProductoModal" class="modal" role="dialog" aria-labelledby="busqueda-title" aria-modal="true">
         <div class="modal-content" style="max-width: 900px;">
             <button class="close" aria-label="Cerrar" onclick="closeBusquedaProductoModal()">&times;</button>
             <h3 id="busqueda-title">Búsqueda de Producto</h3>
             <input type="text" id="filtro_descripcion" placeholder="Filtrar por nombre o descripción" oninput="filterBusquedaProductos()" style="width: 100%; margin-bottom: 15px;">
+            
             <div id="busqueda-table-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
                 <table id="busqueda-table" class="pos-table" style="width: 100%;" aria-label="Lista de productos en inventario">
                     <thead>
@@ -689,13 +252,16 @@
         </div>
     </div>
 
+    <!-- Modal de Caja -->
     <div id="cajaModal" class="modal" role="dialog" aria-labelledby="caja-title" aria-modal="true">
         <div class="modal-content" style="max-width: 450px; text-align: center;">
             <button class="close" aria-label="Cerrar caja de cobro" onclick="closeCajaModal()">&times;</button>
             <h3 id="caja-title" style="color: #007bff; margin-bottom: 20px;">Caja de Cobro</h3>
+
             <h1 style="color: #333;">Total a Pagar:</h1>
             <h2 id="caja-total-a-pagar" style="color: #d9534f; font-size: 2.5rem; margin-top: 5px;" role="status" aria-live="polite">C$0.00</h2>
             <p id="total-letras" style="font-size: 0.8rem; color: #666;">--</p>
+            
             <form id="cajaForm" style="margin-top: 20px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
@@ -715,8 +281,10 @@
                         <input type="number" id="pago-credito" value="0.00" step="0.01" min="0" oninput="calcularCambio()">
                     </div>
                 </div>
+                
                 <h3 style="margin-top: 25px;">Cambio:</h3>
                 <h2 id="caja-monto-cambio" style="color: #28a745; font-size: 2rem;" role="status" aria-live="polite">C$0.00</h2>
+
                 <div style="display: flex; justify-content: space-around; gap: 10px; margin-top: 20px;">
                     <button type="button" class="btn-edit" onclick="closeCajaModal()" style="background-color: #dc3545; color: white;">Cancelar</button>
                     <button type="button" class="btn-add-product" onclick="finalizarVentaDesdeCaja()" style="background-color: #28a745; color: white;">Aceptar</button>
@@ -725,12 +293,13 @@
         </div>
     </div>
 
-    <!-- Modal de Selección de Cliente -->
+    <!-- ✅ Modal de Selección de Cliente -->
     <div id="clienteSelectionModal" class="modal" role="dialog" aria-labelledby="cliente-modal-title" aria-modal="true">
         <div class="modal-content" style="max-width: 600px;">
             <button class="close" aria-label="Cerrar" onclick="closeClienteSelectionModal()">&times;</button>
             <h3 id="cliente-modal-title">Seleccionar Cliente</h3>
             <input type="text" id="filtro-cliente-pos" placeholder="Filtrar por nombre o ID" oninput="filterClientesPOS()" style="width: 100%; margin-bottom: 15px;">
+            
             <div id="clientes-table-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
                 <table id="clientes-table" class="pos-table" style="width: 100%;" aria-label="Lista de clientes">
                     <thead>
@@ -748,12 +317,13 @@
         </div>
     </div>
 
-    <!-- Modal de Selección de Vendedor -->
+    <!-- ✅ Modal de Selección de Vendedor -->
     <div id="vendedorSelectionModal" class="modal" role="dialog" aria-labelledby="vendedor-modal-title" aria-modal="true">
         <div class="modal-content" style="max-width: 600px;">
             <button class="close" aria-label="Cerrar" onclick="closeVendedorSelectionModal()">&times;</button>
             <h3 id="vendedor-modal-title">Seleccionar Vendedor</h3>
             <input type="text" id="filtro-vendedor-pos" placeholder="Filtrar por nombre o ID" oninput="filterVendedoresPOS()" style="width: 100%; margin-bottom: 15px;">
+            
             <div id="vendedores-table-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
                 <table id="vendedores-table" class="pos-table" style="width: 100%;" aria-label="Lista de vendedores">
                     <thead>
@@ -772,30 +342,38 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:4000/api';
-        let token = localStorage.getItem('token');
+        const API_URL = 'https://raw-philipa-odvin123-8a860263.koyeb.app/api'; 
+        let token = localStorage.getItem('token'); 
         let tenantId = localStorage.getItem('tenant_id');
-        let ventaActual = [];
-        let productosInventarioCache = [];
+        
+        let ventaActual = []; 
+        let productosInventarioCache = []; 
         let categoriasCache = [];
         let proveedoresCache = [];
         let clientesCachePOS = [];
         let vendedoresCachePOS = [];
 
+        const defaultAdmin = 'ADMINISTRADOR'; 
+        const defaultCliente = 'PUBLICO EN GENERAL';
+        const defaultVendedor = 'MOSTRADOR';
+
         // ✅ Función para cargar estado inicial
         function loadState() {
-            document.getElementById('footer-administrador').textContent = 'ADMINISTRADOR';
-            const currentCliente = localStorage.getItem('currentClienteName') || 'PUBLICO EN GENERAL';
-            const currentVendedor = localStorage.getItem('currentVendedorName') || 'MOSTRADOR';
+            document.getElementById('footer-administrador').textContent = defaultAdmin; 
+
+            const currentCliente = localStorage.getItem('currentClienteName') || defaultCliente;
+            const currentVendedor = localStorage.getItem('currentVendedorName') || defaultVendedor;
+
             document.getElementById('footer-cliente').textContent = currentCliente;
             document.getElementById('footer-vendedor').textContent = currentVendedor;
+
             if (!localStorage.getItem('currentClienteId')) localStorage.setItem('currentClienteId', 1);
             if (!localStorage.getItem('currentVendedorId')) localStorage.setItem('currentVendedorId', 1);
         }
 
         // ✅ Funciones para modales de cliente/vendedor
         function openClienteSelectionModal() {
-            if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; }
+            if (!token) { alert('Sesión no válida. Por favor, inicie sesión.'); return; } 
             document.getElementById('clienteSelectionModal').style.display = 'block';
             if (clientesCachePOS.length === 0) {
                 loadClientesForPOS();
@@ -834,21 +412,21 @@
                     return [];
                 }
                 const data = await response.json();
-                return data[endpoint];
-            } catch (error) {
-                console.error(`Error de conexión al cargar ${endpoint}:`, error);
+                return data[endpoint]; 
+            } catch (error) { 
+                console.error(`Error de conexión al cargar ${endpoint}:`, error); 
                 return [];
             }
         }
 
         async function loadClientesForPOS() {
-            const clientes = await fetchData('clientes');
+            const clientes = await fetchData('clientes'); 
             clientesCachePOS = clientes;
             renderClientesForPOS(clientes);
         }
 
         async function loadVendedoresForPOS() {
-            const vendedores = await fetchData('vendedores');
+            const vendedores = await fetchData('vendedores'); 
             vendedoresCachePOS = vendedores;
             renderVendedoresForPOS(vendedores);
         }
@@ -856,10 +434,12 @@
         function renderClientesForPOS(clientes) {
             const tbody = document.getElementById('clientes-tbody');
             tbody.innerHTML = '';
+            
             if (clientes.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay clientes registrados.</td></tr>';
                 return;
             }
+
             clientes.forEach(c => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -877,10 +457,12 @@
         function renderVendedoresForPOS(vendedores) {
             const tbody = document.getElementById('vendedores-tbody');
             tbody.innerHTML = '';
+            
             if (vendedores.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay vendedores registrados.</td></tr>';
                 return;
             }
+
             vendedores.forEach(v => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -897,50 +479,51 @@
 
         function filterClientesPOS() {
             const filtro = document.getElementById('filtro-cliente-pos').value.toLowerCase();
-            const clientesFiltrados = clientesCachePOS.filter(c =>
-                c.nombre.toLowerCase().includes(filtro) ||
-                c.id.toString().includes(filtro)
+            const clientesFiltrados = clientesCachePOS.filter(c => 
+                c.nombre.toLowerCase().includes(filtro) || 
+                c.id.toString().includes(filtro) 
             );
             renderClientesForPOS(clientesFiltrados);
         }
 
         function filterVendedoresPOS() {
             const filtro = document.getElementById('filtro-vendedor-pos').value.toLowerCase();
-            const vendedoresFiltrados = vendedoresCachePOS.filter(v =>
-                v.nombre.toLowerCase().includes(filtro) ||
-                v.id.toString().includes(filtro)
+            const vendedoresFiltrados = vendedoresCachePOS.filter(v => 
+                v.nombre.toLowerCase().includes(filtro) || 
+                v.id.toString().includes(filtro) 
             );
             renderVendedoresForPOS(vendedoresFiltrados);
         }
 
         // ✅ Seleccionar y actualizar
         function selectClientFromModal(name, id) {
-            updateSelectedEntity('cliente', name, id);
+            updateSelectedEntity('cliente', name, id); 
             closeClienteSelectionModal();
         }
 
         function selectVendedorFromModal(name, id) {
-            updateSelectedEntity('vendedor', name, id);
+            updateSelectedEntity('vendedor', name, id); 
             closeVendedorSelectionModal();
         }
 
         window.updateSelectedEntity = function(type, name, id) {
             if (type === 'cliente') {
                 localStorage.setItem('currentClienteName', name);
-                localStorage.setItem('currentClienteId', id);
+                localStorage.setItem('currentClienteId', id); 
                 document.getElementById('footer-cliente').textContent = name;
             } else if (type === 'vendedor') {
                 localStorage.setItem('currentVendedorName', name);
-                localStorage.setItem('currentVendedorId', id);
+                localStorage.setItem('currentVendedorId', id); 
                 document.getElementById('footer-vendedor').textContent = name;
             }
         }
 
         // ✅ Funciones existentes (sin cambios, solo ajuste para ticket)
+
         function openMovimientoVentasModal() {
             if (!token) {
                 alert('Sesión no válida. Por favor, inicie sesión.');
-                window.location.href = 'login.html';
+                window.location.href = 'login.html'; 
                 return;
             }
             document.getElementById('movimientoVentasModal').style.display = 'block';
@@ -950,12 +533,12 @@
         function closeMovimientoVentasModal() {
             document.getElementById('movimientoVentasModal').style.display = 'none';
             document.getElementById('movimientoVentasForm').reset();
-            clearMovimientoInputs();
+            clearMovimientoInputs(); 
         }
 
         function openBusquedaProductoModal() {
             document.getElementById('busquedaProductoModal').style.display = 'block';
-            filterProductsByClasificacion(true);
+            filterProductsByClasificacion(true); 
             document.getElementById('filtro_descripcion').value = '';
             document.getElementById('filtro_descripcion').focus();
         }
@@ -970,6 +553,7 @@
             document.getElementById('caja-total-a-pagar').textContent = `C$${total.toFixed(2)}`;
             document.getElementById('total-letras').textContent = '(Monto en letras no implementado)';
             calcularCambio();
+
             // Guardar para el ticket
             window.currentClienteNombre = clienteNombre;
             window.currentVendedorNombre = vendedorNombre;
@@ -983,12 +567,15 @@
         function calcularCambio() {
             const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
             const totalVenta = parseFloat(totalVentaStr);
+            
             const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
             const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
             const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
             const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+
             const totalPagado = efectivo + tarjeta + transferencia + credito;
             const cambio = totalPagado - totalVenta;
+            
             const cambioDisplay = document.getElementById('caja-monto-cambio');
             cambioDisplay.textContent = `C$${cambio.toFixed(2)}`;
             cambioDisplay.style.color = cambio >= 0 ? '#28a745' : '#dc3545';
@@ -1024,11 +611,13 @@
 
         function filterProductsByClasificacion(isInitialLoad = false) {
             const clasificacionId = document.getElementById('clasificacion').value;
-            if (!isInitialLoad) clearMovimientoInputs();
+            if (!isInitialLoad) clearMovimientoInputs(); 
+            
             let productosFiltrados = productosInventarioCache;
             if (clasificacionId !== 'TODOS') {
                 productosFiltrados = productosInventarioCache.filter(p => p.categoria_id == clasificacionId);
             }
+            
             if (document.getElementById('busquedaProductoModal').style.display === 'block') {
                 renderBusquedaProductos(productosFiltrados);
             }
@@ -1037,24 +626,30 @@
         function filterBusquedaProductos() {
             const filtro = document.getElementById('filtro_descripcion').value.toLowerCase();
             const clasificacionId = document.getElementById('clasificacion').value;
+            
             let productosBase = productosInventarioCache;
+            
             if (clasificacionId !== 'TODOS') {
                 productosBase = productosBase.filter(p => p.categoria_id == clasificacionId);
             }
-            const productosFiltrados = productosBase.filter(p =>
-                p.descripcion.toLowerCase().includes(filtro) ||
-                p.id.toString().includes(filtro)
+            
+            const productosFiltrados = productosBase.filter(p => 
+                p.descripcion.toLowerCase().includes(filtro) || 
+                p.id.toString().includes(filtro) 
             );
+            
             renderBusquedaProductos(productosFiltrados);
         }
 
         function renderBusquedaProductos(productos) {
             const tbody = document.getElementById('busqueda-tbody');
             tbody.innerHTML = '';
+            
             if (productos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No se encontraron productos.</td></tr>';
                 return;
             }
+
             productos.forEach(p => {
                 const proveedor = proveedoresCache.find(prov => prov.id === p.proveedor_id);
                 const tr = document.createElement('tr');
@@ -1076,27 +671,31 @@
         function selectProductForSale(productId) {
             const producto = productosInventarioCache.find(p => p.id === productId);
             if (!producto) return;
+            
             document.getElementById('selected_product_id').value = producto.id;
-            document.getElementById('selected_product_clave').value = producto.id;
+            document.getElementById('selected_product_clave').value = producto.id; 
             document.getElementById('producto_nombre').value = producto.descripcion;
             document.getElementById('existencia_stock').value = producto.stock;
             document.getElementById('precio_unitario').value = `C$${parseFloat(producto.precio).toFixed(2)}`;
             document.getElementById('cantidad_venta').value = 1;
+            
             closeBusquedaProductoModal();
-            validateStock();
+            validateStock(); 
         }
 
         function validateStock() {
             const stock = parseInt(document.getElementById('existencia_stock').value);
             const cantidadInput = document.getElementById('cantidad_venta');
             let cantidad = parseInt(cantidadInput.value);
+
             if (isNaN(cantidad) || cantidad <= 0) {
                 cantidadInput.value = 1;
                 cantidad = 1;
             }
+
             if (stock !== '--' && stock < cantidad) {
                 alert(`Stock Insuficiente. Solo hay ${stock} unidades disponibles.`);
-                cantidadInput.value = stock > 0 ? stock : 1;
+                cantidadInput.value = stock > 0 ? stock : 1; 
                 if (stock <= 0) {
                     alert("Este producto no tiene stock disponible.");
                     cantidadInput.value = 1;
@@ -1111,29 +710,37 @@
             const stock = parseInt(document.getElementById('existencia_stock').value);
             const precioStr = document.getElementById('precio_unitario').value.replace('C$', '');
             const precio = parseFloat(precioStr);
+            
             if (!productId) {
                 alert("Debe seleccionar un producto primero.");
                 return;
             }
+            
             if (cantidad <= 0 || isNaN(cantidad)) {
                 alert("La cantidad debe ser un número positivo.");
                 return;
             }
+            
             const productoData = productosInventarioCache.find(p => p.id === productId);
             if (!productoData) return;
+
             const existingItem = ventaActual.find(item => item.id === productId);
             const currentlyInSale = existingItem ? existingItem.cantidad : 0;
+            
             if ((currentlyInSale + cantidad) > stock) {
                 alert(`Stock Insuficiente. Al añadir ${cantidad}, se superaría el stock disponible de ${stock}.`);
                 return;
             }
+
             addProductToSale(productoData, cantidad, precio);
             closeMovimientoVentasModal();
         });
 
         function addProductToSale(producto, cantidad, precio) {
             const importe = cantidad * precio;
+            
             const existingItem = ventaActual.find(item => item.id === producto.id);
+            
             if (existingItem) {
                 existingItem.cantidad += cantidad;
                 existingItem.importe = existingItem.cantidad * existingItem.precio;
@@ -1147,6 +754,7 @@
                     importe: importe
                 });
             }
+            
             renderVentaActual();
         }
 
@@ -1170,11 +778,13 @@
             const tbody = document.querySelector('.pos-table tbody');
             tbody.innerHTML = '';
             let totalVenta = 0;
+
             if (ventaActual.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #aaa;">Presione 🔍 para añadir productos.</td></tr>';
                 document.getElementById('total-amount').textContent = 'C$0.00';
                 return;
             }
+
             ventaActual.forEach(item => {
                 totalVenta += item.importe;
                 const tr = document.createElement('tr');
@@ -1187,9 +797,10 @@
                 `;
                 tbody.appendChild(tr);
             });
+
             document.getElementById('total-amount').textContent = `C$${totalVenta.toFixed(2)}`;
         }
-
+        
         function clearMovimientoInputs() {
             document.getElementById('selected_product_id').value = '';
             document.getElementById('selected_product_clave').value = '';
@@ -1207,6 +818,7 @@
             const timeStr = now.toLocaleTimeString('es-NI', {
                 hour: '2-digit', minute: '2-digit', second: '2-digit'
             });
+
             document.getElementById('current-date').textContent = dateStr;
             document.getElementById('current-time').textContent = timeStr;
         }
@@ -1216,11 +828,13 @@
             const height = 700;
             const left = (screen.width / 2) - (width / 2);
             const top = (screen.height / 2) - (height / 2);
+            
             const newWindow = window.open(
                 url,
-                'CatalogosPOSWindow',
+                'CatalogosPOSWindow', 
                 `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
             );
+
             if (newWindow) {
                 newWindow.focus();
             } else {
@@ -1234,48 +848,59 @@
                 alert("No hay productos en la venta para cobrar.");
                 return;
             }
+
             const clienteActualNombre = localStorage.getItem('currentClienteName') || 'PUBLICO EN GENERAL';
             const vendedorActualNombre = localStorage.getItem('currentVendedorName') || 'MOSTRADOR';
+
             const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
             const totalVenta = parseFloat(totalVentaStr);
+
             openCajaModal(totalVenta, clienteActualNombre, vendedorActualNombre);
         }
 
         async function finalizarVentaDesdeCaja() {
             const totalVentaStr = document.getElementById('total-amount').textContent.replace('C$', '');
             const totalVenta = parseFloat(totalVentaStr);
+
             const efectivo = parseFloat(document.getElementById('pago-efectivo').value) || 0;
             const tarjeta = parseFloat(document.getElementById('pago-tarjeta').value) || 0;
             const transferencia = parseFloat(document.getElementById('pago-transferencia').value) || 0;
             const credito = parseFloat(document.getElementById('pago-credito').value) || 0;
+            
             const totalPagado = efectivo + tarjeta + transferencia + credito;
+
             if (totalPagado < totalVenta) {
                 alert(`¡ERROR! Falta pagar C$${(totalVenta - totalPagado).toFixed(2)}. Complete el pago.`);
                 return;
             }
+            
             const pagos = [];
             if (efectivo > 0) pagos.push({ metodo: 'Efectivo', monto: efectivo });
             if (tarjeta > 0) pagos.push({ metodo: 'Tarjeta', monto: tarjeta });
             if (transferencia > 0) pagos.push({ metodo: 'Transferencia', monto: transferencia });
             if (credito > 0) pagos.push({ metodo: 'Credito', monto: credito });
+
             if (pagos.length === 0) {
                 alert("Debe ingresar al menos un pago para finalizar la venta.");
                 return;
             }
+            
             const btnAceptar = document.querySelector('#cajaModal .btn-add-product');
             btnAceptar.disabled = true;
+
             try {
                 const ventaData = {
-                    cliente_id: parseInt(localStorage.getItem('currentClienteId')) || 1,
-                    vendedor_id: parseInt(localStorage.getItem('currentVendedorId')) || 1,
+                    cliente_id: parseInt(localStorage.getItem('currentClienteId')) || 1, 
+                    vendedor_id: parseInt(localStorage.getItem('currentVendedorId')) || 1, 
                     es_factura: document.getElementById('check-factura').checked,
                     detalles: ventaActual.map(item => ({
                         producto_id: item.id,
                         cantidad: item.cantidad,
                         precio_unitario: item.precio
                     })),
-                    pagos: pagos
+                    pagos: pagos 
                 };
+
                 const response = await fetch(`${API_URL}/admin/ventas`, {
                     method: 'POST',
                     headers: {
@@ -1284,12 +909,16 @@
                     },
                     body: JSON.stringify(ventaData)
                 });
+
                 const result = await response.json();
+
                 if (response.ok && result.success) {
                     alert(`¡ÉXITO! Venta #${result.folio} registrada. Cambio a devolver: C$${result.cambio}`);
+
                     // ✅ GENERAR TICKET AUTOMÁTICAMENTE
                     const clienteActualNombre = window.currentClienteNombre || 'PUBLICO EN GENERAL';
                     const vendedorActualNombre = window.currentVendedorNombre || 'MOSTRADOR';
+
                     generateTicket(
                         result.folio,
                         ventaActual,
@@ -1298,10 +927,12 @@
                         vendedorActualNombre,
                         result.cambio
                     );
+
                     ventaActual = [];
                     renderVentaActual();
                     closeCajaModal();
-                    loadInventarioPDV();
+                    loadInventarioPDV(); 
+                    
                 } else {
                     alert('Error al registrar la venta: ' + (result.message || 'Error desconocido del servidor.'));
                 }
@@ -1309,44 +940,49 @@
                 alert('Error de conexión o de red al procesar la venta.');
                 console.error('Error en fetch (finalizarVentaDesdeCaja):', error);
             } finally {
-                btnAceptar.disabled = false;
+                btnAceptar.disabled = false; 
             }
         }
 
-        function generateTicket(folio, productos, total, clienteNombre, vendedorNombre, cambio) {
-            const now = new Date();
-            const fechaHora = now.toLocaleString('es-NI');
-            const nombreEmpresa = localStorage.getItem('nombre_empresa') || 'TU EMPRESA';
-            const ticketData = {
-                folio,
-                fechaHora,
-                clienteNombre,
-                vendedorNombre,
-                productos,
-                total,
-                cambio,
-                nombreEmpresa
-            };
-            sessionStorage.setItem('ticketData', JSON.stringify(ticketData));
-            const ticketWindow = window.open('ticket.html', '_blank', 'width=350,height=600,resizable,scrollbars');
-            if (!ticketWindow) {
-                alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes.');
-            }
-        }
+       function generateTicket(folio, productos, total, clienteNombre, vendedorNombre, cambio) {
+    const now = new Date();
+    const fechaHora = now.toLocaleString('es-NI');
 
+    // ✅ Incluir nombre de la empresa
+    const nombreEmpresa = localStorage.getItem('nombre_empresa') || 'TU EMPRESA';
+
+    const ticketData = {
+        folio,
+        fechaHora,
+        clienteNombre,
+        vendedorNombre,
+        productos,
+        total,
+        cambio,
+        nombreEmpresa  // ✅ Clave: sin esto, el ticket no muestra la empresa
+    };
+
+    sessionStorage.setItem('ticketData', JSON.stringify(ticketData));
+    const ticketWindow = window.open('ticket.html', '_blank', 'width=350,height=600,resizable,scrollbars');
+    
+    if (!ticketWindow) {
+        alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes.');
+    }
+}
         // Atajos de teclado
         document.addEventListener('keydown', function(event) {
             const tagName = event.target.tagName.toLowerCase();
             const isInput = (tagName === 'input' || tagName === 'textarea');
+            
             if (event.code === 'F2' && !isInput) {
-                event.preventDefault();
+                event.preventDefault(); 
                 openWindow('vendedores.html');
             } else if (event.code === 'F3' && !isInput) {
-                event.preventDefault();
+                event.preventDefault(); 
                 openWindow('clientes.html');
             } else if (event.code === 'F6' && !isInput) {
-                event.preventDefault();
-                handleCorteCaja();
+                event.preventDefault(); 
+                handleCorteCaja(); 
             } else if (event.code === 'F7' && !isInput && ventaActual.length > 0) {
                 event.preventDefault();
                 clearSale();
@@ -1355,50 +991,67 @@
                 handleCobrar();
             } else if (event.code === 'F9' && !isInput) {
                 event.preventDefault();
-                handleCancelarNV();
+                handleCancelarNV(); 
             } else if (event.key === 'Delete' && !isInput) {
                 event.preventDefault();
                 removeItemFromSale();
             } else if (event.code === 'Enter' && event.target.id === 'barcode-input') {
-                event.preventDefault();
-                openMovimientoVentasModal();
+                event.preventDefault(); 
+                openMovimientoVentasModal(); 
             }
         });
 
-        // ✅ Inicialización
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!token) {
-                alert('Sesión no válida. Redirigiendo al login.');
-                window.location.href = 'login.html';
-                return;
-            }
-            loadState();
-            // ✅ Mostrar "Bienvenido Administrador"
-            document.getElementById('company-name').textContent = 'Bienvenido Administrador';
-            // ✅ Eliminar folio
-            document.getElementById('folio-number').closest('.folio-box').style.display = 'none';
-            // ✅ Cargar fecha/hora
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            renderVentaActual();
-            document.querySelector('.search-icon').addEventListener('click', openMovimientoVentasModal);
-            document.getElementById('barcode-input').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    openMovimientoVentasModal();
-                }
-            });
-            const cobrarBtn = document.querySelector('.cobrar-btn');
-            if (cobrarBtn) {
-                cobrarBtn.removeEventListener('click', handleCobrar);
-                cobrarBtn.addEventListener('click', handleCobrar);
-            }
-            await loadCategoriasAndInitBusqueda();
-        });
+       // ✅ Inicialización
+       document.addEventListener('DOMContentLoaded', async () => {
+    if (!token) {
+        alert('Sesión no válida. Redirigiendo al login.');
+        window.location.href = 'login.html';
+        return;
+    }
 
-        // Funciones placeholder
+    loadState();
+
+    // ✅ 1. Mostrar nombre de empresa y tenant_id
+    const nombreEmpresa = localStorage.getItem('nombre_empresa') || 'TU EMPRESA';
+    document.getElementById('company-name').textContent = `BIENVENIDO ${nombreEmpresa}`;
+    document.getElementById('tenant-display').textContent = tenantId || '—';
+
+   // ✅ 2. Cargar folio dinámico desde backend
+try {
+    const folioRes = await fetch(`${API_URL}/admin/ventas/folio_actual`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const folioData = await folioRes.json();
+    document.getElementById('folio-number').textContent = folioData.success ? folioData.folio : '1';
+} catch (e) {
+    console.error('Error al cargar folio:', e);
+    document.getElementById('folio-number').textContent = '1';
+}
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    renderVentaActual();
+    
+    document.querySelector('.search-icon').addEventListener('click', openMovimientoVentasModal);
+    document.getElementById('barcode-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            openMovimientoVentasModal(); 
+        }
+    });
+    
+    const cobrarBtn = document.querySelector('.cobrar-btn');
+    if(cobrarBtn) {
+        cobrarBtn.removeEventListener('click', handleCobrar); 
+        cobrarBtn.addEventListener('click', handleCobrar);
+    }
+    
+    await loadCategoriasAndInitBusqueda();
+});
+
+        // Funciones placeholder (para evitar errores si se llaman)
         function handleCorteCaja() { alert('Función de corte de caja no implementada.'); }
-        function handleCancelarNV() {
+        function handleCancelarNV() { 
             if (confirm("¿Cancelar venta actual?")) {
                 ventaActual = [];
                 renderVentaActual();
@@ -1407,6 +1060,7 @@
         function saveProveedor() {}
         function saveCategoria() {}
         function saveProduct() {}
+
     </script>
 </body>
 </html>
